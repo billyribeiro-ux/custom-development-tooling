@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    // Target modern Node 22. "NodeNext" makes module resolution match
+    // exactly how Node itself resolves ESM/CJS — no surprises at runtime.
+    "target": "ES2023",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2023"],
+    "types": ["node"],
+
+    // Strictness is the whole point of using TypeScript for scripts.
+    // Turn it all on so the compiler catches mistakes before they ship.
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "exactOptionalPropertyTypes": true,
+
+    // We run .ts directly (type-stripping / tsx) and never emit .js for
+    // scripts, so we only type-check. "noEmit" makes `tsc` a pure linter.
+    "noEmit": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["examples/**/*.ts", "tests/**/*.ts"]
+}

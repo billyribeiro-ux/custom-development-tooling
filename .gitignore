@@ -1,0 +1,25 @@
+# Generated output — the site is built from source by tools/generate-pages.mjs.
+# We never commit build artifacts: they would drift from source and bloat diffs.
+/site/
+
+# Dependencies
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+
+# Secrets — NEVER commit a real .env. Commit .env.example instead.
+.env
+.env.local
+.env.*.local
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/.cache/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.log

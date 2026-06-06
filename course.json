@@ -1,0 +1,248 @@
+{
+  "title": "Custom Development Tooling",
+  "subtitle": "Build the scripts and config that run real software — and learn to build whatever you want",
+  "edition": "2026 Edition",
+  "repoUrl": "https://github.com/billyribeiro-ux/custom-development-tooling",
+  "modules": [
+    {
+      "id": "00-orientation",
+      "title": "Orientation",
+      "blurb": "What this course is, what you'll build, and how to set up your machine.",
+      "lessons": [
+        { "slug": "welcome", "title": "Welcome & How to Use This Course" },
+        { "slug": "what-you-will-build", "title": "What You'll Build (Capstone Preview)" },
+        { "slug": "setup", "title": "Setting Up Your Machine" },
+        { "slug": "how-this-site-was-built", "title": "How This Site Was Built (Dogfooding)" }
+      ]
+    },
+    {
+      "id": "01-foundations",
+      "title": "Foundations: What Tooling Actually Is",
+      "blurb": "The mental models that make every later lesson click.",
+      "lessons": [
+        { "slug": "what-is-tooling", "title": "What Development Tooling Is and Why It Exists" },
+        { "slug": "feedback-loop", "title": "The Feedback Loop and the Cost of Manual Work" },
+        { "slug": "source-vs-generated", "title": "Source vs Generated Artifacts" },
+        { "slug": "idempotency-determinism", "title": "Idempotency, Determinism, and Reproducibility" },
+        { "slug": "anatomy-of-a-script", "title": "Anatomy of a Good Script" }
+      ]
+    },
+    {
+      "id": "02-shell-environment",
+      "title": "The Shell Environment",
+      "blurb": "How your terminal actually works under the hood.",
+      "lessons": [
+        { "slug": "what-is-a-shell", "title": "What a Shell Is (bash vs zsh vs sh vs PowerShell)" },
+        { "slug": "path", "title": "PATH: How the OS Finds Your Commands" },
+        { "slug": "environment-variables", "title": "Environment Variables and the Process Environment" },
+        { "slug": "streams", "title": "stdin, stdout, stderr, and Pipes" },
+        { "slug": "exit-codes", "title": "Exit Codes and What 'Success' Means" },
+        { "slug": "globbing-quoting", "title": "Globbing, Quoting, and Word-Splitting Gotchas" },
+        { "slug": "sequencing", "title": "Subshells, &&, ||, and Command Sequencing" }
+      ]
+    },
+    {
+      "id": "03-shell-scripts",
+      "title": "Shell Scripts (.sh)",
+      "blurb": "Write safe, portable bash you can trust in production.",
+      "lessons": [
+        { "slug": "first-script", "title": "Your First .sh: Shebangs and the Executable Bit" },
+        { "slug": "safety-preamble", "title": "set -euo pipefail, Explained Line by Line" },
+        { "slug": "parameter-expansion", "title": "Variables, Parameter Expansion, and Defaults" },
+        { "slug": "control-flow", "title": "Conditionals, Loops, and case" },
+        { "slug": "functions-args", "title": "Functions, Arguments, and Return Values" },
+        { "slug": "trap-cleanup", "title": "Reading Input, trap for Cleanup, and Temp Files" },
+        { "slug": "clean-cache-narrated", "title": "Worked Example: clean-cache.sh Narrated", "example": "examples/shell/clean-cache.sh" },
+        { "slug": "shellcheck", "title": "ShellCheck and Writing Lint-Clean Scripts" }
+      ]
+    },
+    {
+      "id": "04-cli-design",
+      "title": "Argument Parsing & CLI Design",
+      "blurb": "Design command-line tools people actually enjoy using.",
+      "lessons": [
+        { "slug": "designing-a-cli", "title": "Designing a CLI: Flags, Positionals, Subcommands, --help" },
+        { "slug": "getopts", "title": "Parsing Args in Bash with getopts" },
+        { "slug": "parseargs", "title": "Parsing Args in Node 22 with util.parseArgs" },
+        { "slug": "argparse", "title": "Parsing Args in Python with argparse" },
+        { "slug": "exit-codes-conventions", "title": "Exit Codes, Usage Errors, and --version" }
+      ]
+    },
+    {
+      "id": "05-node-esm",
+      "title": "Node ESM Scripts (.mjs)",
+      "blurb": "Modern Node scripting with built-ins only — no framework needed.",
+      "lessons": [
+        { "slug": "esm-vs-cjs", "title": "ESM vs CommonJS: .mjs, .cjs, and type:module" },
+        { "slug": "node-builtins", "title": "The node: Built-in Modules Tour" },
+        { "slug": "file-io", "title": "Reading and Writing Files and Walking Directories" },
+        { "slug": "child-process", "title": "Running Other Processes with child_process" },
+        { "slug": "async-errors", "title": "Top-Level await, async Patterns, and Error Handling" },
+        { "slug": "seed-database-narrated", "title": "Worked Example: seed-database.mjs Narrated", "example": "examples/node/seed-database.mjs" },
+        { "slug": "generator-narrated", "title": "Dissecting This Site's generate-pages.mjs", "example": "tools/generate-pages.mjs" }
+      ]
+    },
+    {
+      "id": "06-python",
+      "title": "Python Scripts (.py)",
+      "blurb": "Python as a first-class tooling language.",
+      "lessons": [
+        { "slug": "main-idiom", "title": "Running Python Scripts and the __main__ Idiom" },
+        { "slug": "pathlib-subprocess", "title": "pathlib, os, and subprocess for Tooling" },
+        { "slug": "virtualenvs", "title": "Virtual Environments and Why They Matter" },
+        { "slug": "generate-pages-py-narrated", "title": "Worked Example: generate-pages.py Narrated", "example": "tools/generate-pages.py" },
+        { "slug": "choosing-language", "title": "Choosing Node vs Python vs Bash" }
+      ]
+    },
+    {
+      "id": "07-typescript",
+      "title": "TypeScript Build Scripts (.ts)",
+      "blurb": "Types as guardrails for the scripts that build your project.",
+      "lessons": [
+        { "slug": "why-ts", "title": "Why TypeScript for Scripts: Types as Guardrails" },
+        { "slug": "running-ts-2026", "title": "Running .ts Directly in 2026 (Native Stripping, tsx)" },
+        { "slug": "typing-apis", "title": "Typing File/Process APIs and tsconfig.json for Scripts" },
+        { "slug": "build-assets-narrated", "title": "Worked Example: build-assets.ts Narrated", "example": "examples/typescript/build-assets.ts" },
+        { "slug": "compile-vs-run", "title": "Compiling vs Running On the Fly: Trade-offs" }
+      ]
+    },
+    {
+      "id": "08-json",
+      "title": "JSON Config (.json)",
+      "blurb": "The configuration format that ties JavaScript projects together.",
+      "lessons": [
+        { "slug": "json-format", "title": "JSON the Format: Rules, Pitfalls, JSON5/JSONC" },
+        { "slug": "package-json", "title": "package.json Deep Dive" },
+        { "slug": "tsconfig-json", "title": "tsconfig.json Deep Dive" },
+        { "slug": "lockfiles", "title": "Lockfiles: What They Are and Why You Commit Them" },
+        { "slug": "reading-config", "title": "Writing Tools That Read & Merge JSON Safely" }
+      ]
+    },
+    {
+      "id": "09-env",
+      "title": "Environment & Secrets (.env)",
+      "blurb": "Configure apps across environments without leaking secrets.",
+      "lessons": [
+        { "slug": "what-is-dotenv", "title": "The .env File: What It Is and What It Is NOT" },
+        { "slug": "loading-env", "title": "Loading env in Node 22 (--env-file) and Python" },
+        { "slug": "secrets-hygiene", "title": "Secrets Hygiene and the .env.example Pattern" },
+        { "slug": "config-precedence", "title": "Config Precedence: defaults to file to env to flags" },
+        { "slug": "validate-env", "title": "Validating env at Startup (Fail Fast)" }
+      ]
+    },
+    {
+      "id": "10-toml",
+      "title": "TOML Config (.toml)",
+      "blurb": "The config format behind modern Python and Rust.",
+      "lessons": [
+        { "slug": "toml-format", "title": "TOML the Format and Where It's Used" },
+        { "slug": "pyproject", "title": "pyproject.toml: The Modern Python Standard" },
+        { "slug": "tool-config-toml", "title": "Tool Config in TOML (ruff, Cargo.toml)" },
+        { "slug": "reading-toml", "title": "Reading TOML from Your Scripts" }
+      ]
+    },
+    {
+      "id": "11-task-runners",
+      "title": "Task Runners: Makefile and Beyond",
+      "blurb": "One memorable entry point for every project command.",
+      "lessons": [
+        { "slug": "why-task-runner", "title": "Why a Task Runner: One Entry Point for Everything" },
+        { "slug": "make-fundamentals", "title": "Make Fundamentals: Targets, Prerequisites, Recipes" },
+        { "slug": "make-gotchas", "title": "The Tab Gotcha, .PHONY, and Variables in Make" },
+        { "slug": "self-documenting-make", "title": "Self-Documenting Makefiles (make help)" },
+        { "slug": "makefile-narrated", "title": "Worked Example: This Project's Makefile Narrated", "example": "Makefile" },
+        { "slug": "make-alternatives", "title": "Alternatives: npm scripts, just, task" }
+      ]
+    },
+    {
+      "id": "12-config-files",
+      "title": "Tool Config Files (*.config.js / *.config.mjs)",
+      "blurb": "Configuration as code: the pattern modern tools standardized on.",
+      "lessons": [
+        { "slug": "config-as-code", "title": "Why Config-as-Code Beats Static Config" },
+        { "slug": "config-pattern", "title": "The Config-File Pattern: Export an Object or Function" },
+        { "slug": "defineconfig", "title": "defineConfig Helpers and Why Tools Provide Them" },
+        { "slug": "config-mjs-narrated", "title": "Worked Example: A Real *.config.mjs Narrated", "example": "examples/config/site.config.mjs" }
+      ]
+    },
+    {
+      "id": "13-databases",
+      "title": "Databases & Migrations (.sql)",
+      "blurb": "Treat your schema as versioned, reviewable history.",
+      "lessons": [
+        { "slug": "why-migrations", "title": "Why Migrations Exist: Schema as Versioned History" },
+        { "slug": "sql-essentials", "title": "SQL Essentials for Tooling (DDL vs DML)" },
+        { "slug": "migration-anatomy", "title": "Anatomy of a Migration: up/down, Ordering, Idempotency" },
+        { "slug": "migrate-sql-narrated", "title": "Worked Example: migrate.sql Narrated", "example": "examples/sql/migrate.sql" },
+        { "slug": "migration-runner", "title": "Driving Migrations from a Script (migrate.mjs)", "example": "examples/node/migrate.mjs" },
+        { "slug": "seeding", "title": "Seeding Data Safely" }
+      ]
+    },
+    {
+      "id": "14-containers",
+      "title": "Containers (Dockerfile & Compose)",
+      "blurb": "Make 'works on my machine' true for everyone.",
+      "lessons": [
+        { "slug": "what-containers-solve", "title": "What Containers Solve" },
+        { "slug": "dockerfile", "title": "Dockerfile Instructions Line by Line", "example": "examples/docker/Dockerfile" },
+        { "slug": "layers-multistage", "title": "Layer Caching, Multi-Stage Builds, and Small Images" },
+        { "slug": "compose", "title": "docker-compose.yml: Orchestrating Dev Services", "example": "examples/docker/docker-compose.yml" },
+        { "slug": "containerizing-tooling", "title": "Worked Example: Containerizing the Course Tooling" }
+      ]
+    },
+    {
+      "id": "15-cicd",
+      "title": "CI/CD (.yml, GitHub Actions)",
+      "blurb": "Automate lint, test, build, and deploy on every push.",
+      "lessons": [
+        { "slug": "yaml-format", "title": "YAML the Format: Indentation, Anchors, Gotchas" },
+        { "slug": "cicd-concepts", "title": "CI/CD Concepts: What Runs, When, and Why" },
+        { "slug": "actions-anatomy", "title": "GitHub Actions Anatomy: Workflows, Jobs, Steps, Runners" },
+        { "slug": "caching-matrices", "title": "Caching, Matrices, and Secrets in Actions" },
+        { "slug": "ci-workflow-narrated", "title": "Worked Example: A Workflow That Lints, Tests, Builds", "example": ".github/workflows/ci.yml" },
+        { "slug": "deploy-pages", "title": "Deploying the Static Site to GitHub Pages" }
+      ]
+    },
+    {
+      "id": "16-e2e-playwright",
+      "title": "End-to-End Testing & Playwright",
+      "blurb": "Prove the whole thing works the way a user experiences it.",
+      "lessons": [
+        { "slug": "test-pyramid", "title": "Unit vs Integration vs E2E: Where Each Fits" },
+        { "slug": "what-is-playwright", "title": "What Playwright Is and Why It's the Modern Default" },
+        { "slug": "playwright-config", "title": "Anatomy of playwright.config.ts", "example": "tests/e2e/playwright.config.ts" },
+        { "slug": "first-spec", "title": "Your First Spec: Selectors, Assertions, Auto-Waiting" },
+        { "slug": "nav-spec-narrated", "title": "Worked Example: E2E Test for This Site's Navigation", "example": "tests/e2e/nav.spec.ts" },
+        { "slug": "ci-traces", "title": "Running E2E in CI; Traces and Debugging" },
+        { "slug": "flakiness", "title": "Flakiness, Fixtures, and Test Hygiene" }
+      ]
+    },
+    {
+      "id": "17-production",
+      "title": "Putting It Together: Production Patterns",
+      "blurb": "The judgment that separates scripts from systems.",
+      "lessons": [
+        { "slug": "composing-tools", "title": "Composing Tools: Makefile to Scripts to CI" },
+        { "slug": "logging-errors", "title": "Logging, Observability, and Good Error Messages" },
+        { "slug": "cross-platform", "title": "Cross-Platform Pitfalls and Portability" },
+        { "slug": "versioning-releases", "title": "Versioning, Releasing, and Changelogs" }
+      ]
+    },
+    {
+      "id": "18-capstone",
+      "title": "Capstone: Build a Complete Tooling Suite",
+      "blurb": "Assemble everything into one real, automated project.",
+      "lessons": [
+        { "slug": "brief", "title": "Capstone Brief: The Project You'll Automate" },
+        { "slug": "step1-scaffolding", "title": "Step 1 — package.json + pyproject.toml Scaffolding" },
+        { "slug": "step2-bootstrap", "title": "Step 2 — A .sh Bootstrap + .env Validation" },
+        { "slug": "step3-build", "title": "Step 3 — A .mjs/.ts Build Script and a .py Generator" },
+        { "slug": "step4-migrations", "title": "Step 4 — .sql Migrations + a Migration Runner" },
+        { "slug": "step5-containers", "title": "Step 5 — Dockerfile + docker-compose.yml" },
+        { "slug": "step6-makefile", "title": "Step 6 — A Makefile Front Door for Everything" },
+        { "slug": "step7-ci-e2e", "title": "Step 7 — GitHub Actions CI + Playwright E2E" },
+        { "slug": "review", "title": "Capstone Review, Checklist, and Where to Go Next" }
+      ]
+    }
+  ]
+}

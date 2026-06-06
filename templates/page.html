@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{title}} · {{courseTitle}}</title>
+  <link rel="stylesheet" href="{{assets}}/styles.css" />
+  <!-- Monaco editor loader (VS Code's engine), from CDN. app.js configures and
+       lazy-mounts editors so learners can read, edit, and copy every snippet. -->
+  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.js"></script>
+  <script defer src="{{assets}}/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#content">Skip to content</a>
+
+  <header class="site-header">
+    <a class="brand" href="{{home}}">{{courseTitle}}</a>
+    <span class="module-label">{{moduleTitle}}</span>
+  </header>
+
+  <div class="progress" role="progressbar" aria-label="Course progress">
+    <div class="progress-bar" style="width: {{progressPercent}}%"></div>
+  </div>
+
+  <nav class="breadcrumb" aria-label="Breadcrumb">{{breadcrumb}}</nav>
+
+  <main id="content" class="lesson">
+    <p class="progress-text">{{progressText}}</p>
+    <article class="lesson-body">
+      {{body}}
+    </article>
+
+    <nav class="pager" aria-label="Lesson navigation">
+      <a class="pager-prev" {{prevAttrs}}>
+        <span class="pager-dir">&larr; Previous</span>
+        <span class="pager-title">{{prevLabel}}</span>
+      </a>
+      <a class="pager-next" {{nextAttrs}}>
+        <span class="pager-dir">Next &rarr;</span>
+        <span class="pager-title">{{nextLabel}}</span>
+      </a>
+    </nav>
+  </main>
+
+  <footer class="site-footer">
+    {{exampleFooter}}
+    <p class="footer-meta">Use &larr; / &rarr; arrow keys to turn the page.</p>
+  </footer>
+</body>
+</html>

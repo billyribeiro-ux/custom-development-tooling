@@ -1,0 +1,33 @@
+{
+  "name": "custom-development-tooling",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A self-hosted, Monaco-powered course that teaches custom development tooling — and how to build your own.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node tools/generate-pages.mjs",
+    "build:py": "python3 tools/generate-pages.py",
+    "clean": "node --eval \"import('node:fs').then(fs => fs.rmSync('site', { recursive: true, force: true }))\"",
+    "serve": "node tools/serve.mjs",
+    "test:e2e": "playwright test"
+  },
+  "keywords": [
+    "tooling",
+    "automation",
+    "course",
+    "bash",
+    "node",
+    "python",
+    "playwright"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "marked": "12.0.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.60.0"
+  }
+}
