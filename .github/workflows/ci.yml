@@ -1,0 +1,74 @@
+# =============================================================================
+# ci.yml — Continuous Integration + deploy, narrated in Module 15.
+# On every push and pull request: lint, build the site, and run the Playwright
+# end-to-end tests. On pushes to the default branch, also deploy to GitHub Pages.
+# =============================================================================
+name: CI
+
+# When does this run?
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+# Least-privilege permissions for the whole workflow; the deploy job widens them.
+permissions:
+  contents: read
+
+# Cancel an in-progress run if you push again to the same branch (saves minutes).
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---- Build + test --------------------------------------------------------
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm # cache ~/.npm keyed on package-lock.json — faster installs
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint shell scripts
+        run: |
+          sudo apt-get update && sudo apt-get install -y shellcheck
+          shellcheck examples/shell/*.sh
+
+      - name: Type-check TypeScript
+        run: npx tsc --noEmit
+
+      - name: Build the site
+        run: node tools/generate-pages.mjs
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run end-to-end tests
+        run: npx playwright test
+
+      - name: Upload the built site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  # ---- Deploy to GitHub Pages (only on main) -------------------------------
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write # needed to publish
+      id-token: write # needed for the deploy action's OIDC auth
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

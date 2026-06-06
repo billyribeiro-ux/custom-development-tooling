@@ -1,6 +1,7 @@
 # Generated output — the site is built from source by tools/generate-pages.mjs.
 # We never commit build artifacts: they would drift from source and bloat diffs.
 /site/
+/site-py/
 
 # Dependencies
 node_modules/

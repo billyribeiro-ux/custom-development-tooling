@@ -1,0 +1,46 @@
+# =============================================================================
+# docker-compose.yml — orchestrate the services a developer needs locally,
+# narrated in Module 14. One command, `docker compose up`, starts everything:
+# the course site AND a Postgres database for the migration lessons.
+#
+# Compose is for LOCAL DEVELOPMENT orchestration. (Production multi-host
+# orchestration is a different tool — usually Kubernetes.)
+# =============================================================================
+
+services:
+  # The course site, built from the Dockerfile in this folder.
+  site:
+    build:
+      context: ../.. # build from the repo root so the whole project is available
+      dockerfile: examples/docker/Dockerfile
+    ports:
+      - "8080:8080" # host:container — open http://localhost:8080
+    environment:
+      NODE_ENV: development
+    # Wait for the database to be healthy before starting.
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # A real Postgres database for the .sql / migrations lessons.
+  db:
+    image: postgres:16-alpine # pinned major version, tiny Alpine base
+    environment:
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev # local-only credentials; never do this in prod
+      POSTGRES_DB: app_dev
+    ports:
+      - "5432:5432"
+    # A named volume persists data across `down`/`up` so you don't lose it.
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    # A healthcheck lets other services wait until Postgres is actually ready,
+    # not just "started" (the container is up but the DB may still be booting).
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dev -d app_dev"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  db-data:
