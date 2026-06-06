@@ -6,11 +6,11 @@ The final layer: automation. We add **E2E tests** (Module 16) that verify Linkbo
 
 Linkboard's critical user journey (Module 16.1) is simple: *the page loads and shows the saved links.* That's exactly what E2E should verify (it needs a real browser rendering real HTML). Following Module 16.3-16.5:
 
-```typescript title=tests/e2e/playwright.config.ts
+```typescript title=playwright.config.ts
 import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
-  testDir: '.',
+  testDir: './tests/e2e',                           // config at repo root, specs in tests/e2e/ (Module 16.3)
   forbidOnly: !!process.env.CI,                     // catch stray .only in CI (Module 16.3)
   retries: process.env.CI ? 2 : 0,                  // absorb rare flakes in CI (Module 16.3)
   use: { baseURL: 'http://localhost:8080', trace: 'on-first-retry' },  // (Module 16.3)

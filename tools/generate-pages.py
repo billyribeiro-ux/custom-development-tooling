@@ -71,8 +71,9 @@ def render_code(code: str, infostring: str) -> str:
     title_match = re.search(r"title=(\S+)", infostring)
     filename = title_match.group(1) if title_match else ""
     escaped = html.escape(code)
-    file_pill = f'<span class="code-file">{html.escape(filename)}</span>' if filename else ""
-    return f"""<figure class="monaco-block" data-lang="{lang}" data-filename="{html.escape(filename)}">
+    fn = html.escape(filename)
+    file_pill = f'<span class="code-file">{fn}</span>' if filename else ""
+    return f"""<figure class="monaco-block" data-lang="{lang}" data-filename="{fn}">
   <figcaption class="code-caption">
     <span class="code-lang">{html.escape(lang_key)}</span>{file_pill}
     <span class="code-actions">
@@ -150,7 +151,8 @@ def render_markdown(md: str) -> str:
             ordered = bool(re.match(r"^\s*\d+\.\s+", line))
             tag = "ol" if ordered else "ul"
             items = []
-            while i < n and (re.match(r"^\s*[-*]\s+", lines[i]) or re.match(r"^\s*\d+\.\s+", lines[i])):
+            list_re = re.compile(r"^\s*([-*]\s+|\d+\.\s+)")
+            while i < n and list_re.match(lines[i]):
                 item = re.sub(r"^\s*(?:[-*]|\d+\.)\s+", "", lines[i])
                 items.append(f"<li>{render_inline(item)}</li>")
                 i += 1
@@ -222,31 +224,40 @@ def main() -> None:
         if lesson["contentPath"].exists():
             body = render_markdown(lesson["contentPath"].read_text())
         else:
-            body = render_markdown(f"# {lesson['title']}\n\n> [!NOTE]\n> This lesson is coming soon.")
+            placeholder = f"# {lesson['title']}\n\n> [!NOTE]\n> This lesson is coming soon."
+            body = render_markdown(placeholder)
             print(f"  (!) missing content: {lesson['contentPath']}")
 
+        disabled = 'aria-disabled="true" tabindex="-1"'
+        mod_title = html.escape(lesson["module"]["title"])
+        title = html.escape(lesson["title"])
         breadcrumb = (
             '<a href="../index.html">Home</a> <span class="sep">/</span> '
-            f'{html.escape(lesson["module"]["title"])} <span class="sep">/</span> '
-            f'<span aria-current="page">{html.escape(lesson["title"])}</span>'
+            f'{mod_title} <span class="sep">/</span> '
+            f'<span aria-current="page">{title}</span>'
         )
+        if lesson.get("example"):
+            ex = html.escape(lesson["example"])
+            example_footer = (
+                f'<a class="footer-link" href="../../{lesson["example"]}">'
+                f"View the example file: <code>{ex}</code></a>"
+            )
+        else:
+            example_footer = ""
         page = fill(page_tpl, {
             "title": f'Lesson {lesson["globalIndex"]} — {lesson["title"]}',
             "courseTitle": "Custom Development Tooling",
-            "lessonTitle": html.escape(lesson["title"]),
-            "moduleTitle": html.escape(lesson["module"]["title"]),
+            "lessonTitle": title,
+            "moduleTitle": mod_title,
             "breadcrumb": breadcrumb,
             "progressText": f'Lesson {lesson["globalIndex"]} of {total}',
             "progressPercent": round(lesson["globalIndex"] / total * 100),
             "body": body,
-            "prevAttrs": f'href="{prev_l["outName"]}"' if prev_l else 'aria-disabled="true" tabindex="-1"',
+            "prevAttrs": f'href="{prev_l["outName"]}"' if prev_l else disabled,
             "prevLabel": html.escape(prev_l["title"]) if prev_l else "Start of course",
-            "nextAttrs": f'href="{next_l["outName"]}"' if next_l else 'aria-disabled="true" tabindex="-1"',
+            "nextAttrs": f'href="{next_l["outName"]}"' if next_l else disabled,
             "nextLabel": html.escape(next_l["title"]) if next_l else "End of course",
-            "exampleFooter": (
-                f'<a class="footer-link" href="../../{lesson["example"]}">View the example file: '
-                f'<code>{html.escape(lesson["example"])}</code></a>' if lesson.get("example") else ""
-            ),
+            "exampleFooter": example_footer,
             "assets": "../assets",
             "home": "../index.html",
         })
@@ -255,16 +266,19 @@ def main() -> None:
     # Index page.
     toc = ""
     for mi, mod in enumerate(course["modules"]):
-        lessons = [l for l in flat if l["module"]["id"] == mod["id"]]
+        lessons = [x for x in flat if x["module"]["id"] == mod["id"]]
         items = "\n".join(
-            f'      <li><a href="lessons/{l["outName"]}"><span class="toc-num">{l["globalIndex"]}</span> '
-            f'{html.escape(l["title"])}</a></li>'
-            for l in lessons
+            f'      <li><a href="lessons/{x["outName"]}">'
+            f'<span class="toc-num">{x["globalIndex"]}</span> '
+            f'{html.escape(x["title"])}</a></li>'
+            for x in lessons
         )
+        mt = html.escape(mod["title"])
+        blurb = html.escape(mod.get("blurb", ""))
         toc += (
             f'  <section class="toc-module">\n'
-            f'    <h2><span class="toc-module-num">Module {mi}</span> {html.escape(mod["title"])}</h2>\n'
-            f'    <p class="toc-blurb">{html.escape(mod.get("blurb", ""))}</p>\n'
+            f'    <h2><span class="toc-module-num">Module {mi}</span> {mt}</h2>\n'
+            f'    <p class="toc-blurb">{blurb}</p>\n'
             f'    <ol class="toc-lessons">\n{items}\n    </ol>\n  </section>\n'
         )
     index = fill(index_tpl, {

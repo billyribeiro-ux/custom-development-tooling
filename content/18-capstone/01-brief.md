@@ -32,6 +32,7 @@ linkboard/
 ├── Makefile                  # the front door (Module 11.5)
 ├── Dockerfile                # multi-stage container (Module 14.3)
 ├── docker-compose.yml        # app + database (Module 14.4)
+├── playwright.config.ts      # E2E config, at the root (Module 16.3)
 ├── scripts/
 │   ├── bootstrap.sh          # one-time setup, idempotent (Module 3)
 │   ├── migrate.mjs           # apply SQL migrations (Module 13.5)
@@ -42,7 +43,6 @@ linkboard/
 ├── migrations/
 │   └── 0001_init.sql         # schema (Module 13.4)
 ├── tests/e2e/
-│   ├── playwright.config.ts  # E2E config (Module 16.3)
 │   └── linkboard.spec.ts     # E2E tests (Module 16.5)
 └── .github/workflows/
     └── ci.yml                # lint, test, build, deploy (Module 15.5)
