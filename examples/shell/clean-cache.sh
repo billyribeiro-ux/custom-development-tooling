@@ -67,7 +67,6 @@ readonly TARGETS=(
 
 # --- Do the work -------------------------------------------------------------
 deleted_count=0
-freed_human="0"
 
 log() { printf '%s %s\n' "[$PROG]" "$*"; }
 
