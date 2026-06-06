@@ -212,6 +212,7 @@ def main() -> None:
                 "outName": f"{gi:03d}-{lesson['slug']}.html",
             })
     total = len(flat)
+    repo_url = course.get("repoUrl", "")
 
     if out_dir.exists():
         shutil.rmtree(out_dir)
@@ -239,7 +240,7 @@ def main() -> None:
         if lesson.get("example"):
             ex = html.escape(lesson["example"])
             example_footer = (
-                f'<a class="footer-link" href="../../{lesson["example"]}">'
+                f'<a class="footer-link" href="{repo_url}/blob/main/{lesson["example"]}">'
                 f"View the example file: <code>{ex}</code></a>"
             )
         else:

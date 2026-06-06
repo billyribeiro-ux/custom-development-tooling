@@ -237,7 +237,7 @@ function buildLessonGraph(course) {
 // ---------------------------------------------------------------------------
 // 5. Render a single lesson page.
 // ---------------------------------------------------------------------------
-async function renderLesson(lesson, total, pageTemplate) {
+async function renderLesson(lesson, total, pageTemplate, repoUrl) {
   let markdownSource;
   if (await exists(lesson.contentPath)) {
     markdownSource = await readFile(lesson.contentPath, 'utf8');
@@ -263,10 +263,10 @@ async function renderLesson(lesson, total, pageTemplate) {
     ? `href="${lesson.next.outName}"`
     : `aria-disabled="true" tabindex="-1"`;
 
-  // Footer links: the runnable example for this lesson (if any) + the markdown
-  // source on GitHub, so learners can read exactly what produced the page.
+  // Footer link: the runnable example for this lesson (if any), pointing at the
+  // file on GitHub so it resolves both locally and on the deployed site.
   const exampleFooter = lesson.example
-    ? `<a class="footer-link" href="../../${lesson.example}">View the example file: <code>${escapeHtml(
+    ? `<a class="footer-link" href="${repoUrl}/blob/main/${lesson.example}">View the example file: <code>${escapeHtml(
         lesson.example,
       )}</code></a>`
     : '';
@@ -346,6 +346,7 @@ async function main() {
   const course = JSON.parse(await readFile(join(ROOT, 'course.json'), 'utf8'));
   const flat = buildLessonGraph(course);
   const total = flat.length;
+  const repoUrl = course.repoUrl ?? '';
 
   const pageTemplate = await readFile(join(ROOT, 'templates', 'page.html'), 'utf8');
   const indexTemplate = await readFile(join(ROOT, 'templates', 'index.html'), 'utf8');
@@ -359,7 +360,7 @@ async function main() {
 
   // Render every lesson, then the index.
   for (const lesson of flat) {
-    await renderLesson(lesson, total, pageTemplate);
+    await renderLesson(lesson, total, pageTemplate, repoUrl);
   }
   await renderIndex(course, flat, total, indexTemplate);
 
