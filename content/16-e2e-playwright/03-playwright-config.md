@@ -3,7 +3,7 @@
 Playwright is configured with a `playwright.config.ts` file — a config-as-code file (Module 12) using the `defineConfig` pattern (Module 12.3). It controls which browsers to test, how to start your app, and how tests behave in CI vs locally. Reading the course's real config line by line ties Module 12's config concepts to a tool you'll actually use.
 
 > [!DOGFOOD]
-> This is the course's real `tests/e2e/playwright.config.ts`. Open it alongside this lesson. Notice it's a `.ts` config — config-as-code (Module 12.1) with full type-checking.
+> This is the course's real `playwright.config.ts` (at the repo root, where Playwright auto-discovers it). Open it alongside this lesson. Notice it's a `.ts` config — config-as-code (Module 12.1) with full type-checking.
 
 ## The defineConfig wrapper
 
@@ -20,11 +20,11 @@ This is exactly the config-as-code pattern from Module 12: import **`defineConfi
 ## testDir and parallelism
 
 ```typescript title=playwright.config.ts
-  testDir: '.',
+  testDir: './tests/e2e',
   fullyParallel: true,
 ```
 
-- **`testDir: '.'`** — where the spec files live (here, the same folder as the config, `tests/e2e/`).
+- **`testDir: './tests/e2e'`** — where the spec files live (relative to this config at the repo root). Keeping the config at the root means Playwright finds it automatically and the `webServer` command runs from the root.
 - **`fullyParallel: true`** — run independent test files *at the same time* (Module 16.2's parallelism). Because each test is isolated (gets its own `page`, Module 16.2), they can run concurrently for speed.
 
 ## CI-aware settings
@@ -99,7 +99,7 @@ Playwright will **start your app before testing and stop it after** — no manua
 > The course tests only Chromium for speed and simplicity (it's a static site; rendering is consistent). A real cross-browser app would add Firefox and WebKit to catch browser-specific bugs — this is the matrix idea (Module 15.4) but for browsers, configured right here. Adding a browser is one line; the trade-off is test time. Match the breadth to the project's needs (Module 6.5).
 
 > [!TRY]
-> Open the course's `tests/e2e/playwright.config.ts` and find: `defineConfig`, `baseURL`, the `webServer.command`, and the `chromium` project. Then trace what `npx playwright test` does: start `npm run serve` → wait for `localhost:8080` → run the specs in Chromium → shut down. That self-contained flow is the config's whole job.
+> Open the course's `playwright.config.ts` (repo root) and find: `defineConfig`, `baseURL`, the `webServer.command`, and the `chromium` project. Then trace what `npx playwright test` does: start `npm run serve` → wait for `localhost:8080` → run the specs in Chromium → shut down. That self-contained flow is the config's whole job.
 
 > [!KEY]
 > - `playwright.config.ts` is **config-as-code** (Module 12) using **`defineConfig`** (Module 12.3) — typed, autocompleted.

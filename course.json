@@ -210,7 +210,7 @@
       "lessons": [
         { "slug": "test-pyramid", "title": "Unit vs Integration vs E2E: Where Each Fits" },
         { "slug": "what-is-playwright", "title": "What Playwright Is and Why It's the Modern Default" },
-        { "slug": "playwright-config", "title": "Anatomy of playwright.config.ts", "example": "tests/e2e/playwright.config.ts" },
+        { "slug": "playwright-config", "title": "Anatomy of playwright.config.ts", "example": "playwright.config.ts" },
         { "slug": "first-spec", "title": "Your First Spec: Selectors, Assertions, Auto-Waiting" },
         { "slug": "nav-spec-narrated", "title": "Worked Example: E2E Test for This Site's Navigation", "example": "tests/e2e/nav.spec.ts" },
         { "slug": "ci-traces", "title": "Running E2E in CI; Traces and Debugging" },

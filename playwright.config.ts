@@ -2,12 +2,16 @@
 // playwright.config.ts — Playwright configuration, narrated in Module 16.
 // It tells Playwright how to build + serve the site before testing, which
 // browser(s) to use, and how to behave in CI vs locally.
+//
+// It lives at the repo ROOT (Playwright auto-discovers it here), and points
+// testDir at tests/e2e/ where the spec files live. The webServer command and
+// `npm run serve` therefore run from the repo root, as intended.
 // =============================================================================
 import { defineConfig, devices } from '@playwright/test';
 
 // `defineConfig` (the pattern from Module 12) gives us autocomplete + type-checks.
 export default defineConfig({
-  testDir: '.', // spec files live next to this config (tests/e2e/)
+  testDir: './tests/e2e', // where the *.spec.ts files live
   fullyParallel: true, // run independent test files at the same time
 
   // In CI, fail the build if someone left a `test.only` in the code, and retry

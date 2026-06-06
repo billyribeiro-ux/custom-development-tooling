@@ -87,7 +87,7 @@ npx playwright test --ui          # interactive UI mode — step through tests v
 > When a test fails mysteriously, run it `--headed` or `--ui` to *watch* what the browser actually does. Often you'll instantly see the problem ("oh, a cookie banner is covering the button"). Being able to *see* the test run is one of Playwright's best debugging features (more in Module 16.6). Headless for speed; headed for understanding.
 
 > [!DOGFOOD]
-> This course uses Playwright to test its own navigation. `tests/e2e/nav.spec.ts` (Module 16.5) opens the built site in a real Chromium browser, clicks the Previous/Next buttons, presses arrow keys, and asserts the page changed — verifying the exact feature (page navigation) that the generator (Module 5.7) produces. The config is in `tests/e2e/playwright.config.ts` (Module 16.3). Run `make test` or `npx playwright test` to see it.
+> This course uses Playwright to test its own navigation. `tests/e2e/nav.spec.ts` (Module 16.5) opens the built site in a real Chromium browser, clicks the Previous/Next buttons, presses arrow keys, and asserts the page changed — verifying the exact feature (page navigation) that the generator (Module 5.7) produces. The config is in `playwright.config.ts` at the repo root (Module 16.3). Run `make test` or `npx playwright test` to see it.
 
 > [!TRY]
 > If you have the repo, run `npm install && npx playwright install chromium`, then `npx playwright test --headed` — watch a real browser open the course and click through it automatically. Seeing Playwright drive the actual site makes the whole concept click.

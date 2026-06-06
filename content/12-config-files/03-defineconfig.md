@@ -103,7 +103,7 @@ In plain JavaScript (no TypeScript), you can still get *some* editor help via th
 > `defineConfig` is a lovely illustration of a broader idea: **types are a tool for humans, erased before runtime** (Module 7.1). A function that does *nothing* at runtime can still be enormously valuable purely for the development-time guidance its types provide. The "no-op that's actually a type carrier" pattern shows up elsewhere too (e.g. `satisfies` in TypeScript).
 
 > [!DOGFOOD]
-> This course's `examples/config/site.config.mjs` defines and uses its own `defineConfig` (with a JSDoc `@template` generic so it preserves the config's type), exactly as described here. The Playwright config (`tests/e2e/playwright.config.ts`, Module 16) imports `defineConfig` *from Playwright* for full type-checking of the test config. You'll see both in their narrated lessons.
+> This course's `examples/config/site.config.mjs` defines and uses its own `defineConfig` (with a JSDoc `@template` generic so it preserves the config's type), exactly as described here. The Playwright config (`playwright.config.ts`, Module 16) imports `defineConfig` *from Playwright* for full type-checking of the test config. You'll see both in their narrated lessons.
 
 > [!TRY]
 > Write the JSDoc-generic `defineConfig` above in a `.mjs` file, then `export default defineConfig({ port: 8080 })`. In a TypeScript-aware editor, hover the result — you'll see it preserved the exact type. Now imagine that with a tool's full `Config` interface: every option autocompleted and checked. That's the whole value.

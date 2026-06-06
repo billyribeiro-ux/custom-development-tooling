@@ -117,7 +117,7 @@ The convention is almost always `<toolname>.config.<ext>`. The tool searches the
 When you open a project and see `playwright.config.ts` or `vite.config.mjs`, you now know exactly what it is: a code module exporting (an object or function returning) that tool's configuration. You can read it like any other code, follow its logic, and understand how the tool is set up — far more transparent than a mystery JSON blob. That transferable recognition applies to every tool using this pattern.
 
 > [!DOGFOOD]
-> This course's `examples/config/site.config.mjs` (Module 12.4) uses the **object** shape with a `defineConfig` wrapper (Module 12.3) and computed values from `process.env.NODE_ENV`. The Playwright config (`tests/e2e/playwright.config.ts`, Module 16) uses `defineConfig` too. Both are this exact pattern — and you'll dissect them.
+> This course's `examples/config/site.config.mjs` (Module 12.4) uses the **object** shape with a `defineConfig` wrapper (Module 12.3) and computed values from `process.env.NODE_ENV`. The Playwright config (`playwright.config.ts`, Module 16) uses `defineConfig` too. Both are this exact pattern — and you'll dissect them.
 
 > [!TRY]
 > Write a `my.config.mjs` that `export default`s an object with a `mode` field set to `process.env.NODE_ENV ?? 'development'`. Then load it from another file: `const cfg = (await import('./my.config.mjs')).default; console.log(cfg.mode)`. Run it with and without `NODE_ENV=production` set. You've implemented and consumed the config-file pattern.
