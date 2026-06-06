@@ -162,9 +162,18 @@ def render_markdown(md: str) -> str:
             i += 1
             continue
 
-        # Paragraph: gather until a blank line or a block starter.
-        buf = []
-        while i < n and lines[i].strip() != "" and not lines[i].startswith(("#", ">", "```", "-", "*")):
+        # Paragraph: always consume the current line (guarantees progress, so a
+        # line starting with "*" like **bold** can't cause an infinite loop),
+        # then gather following lines until a blank line or a real block starter.
+        buf = [lines[i]]
+        i += 1
+        while (
+            i < n
+            and lines[i].strip() != ""
+            and not lines[i].startswith(("#", ">", "```"))
+            and not re.match(r"^\s*([-*]\s+|\d+\.\s+)", lines[i])
+            and not re.match(r"^---+\s*$", lines[i])
+        ):
             buf.append(lines[i])
             i += 1
         out.append(f"<p>{render_inline(' '.join(buf))}</p>\n")
