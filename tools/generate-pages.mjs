@@ -2,25 +2,22 @@
 // =============================================================================
 // generate-pages.mjs — the static-site generator that builds THIS course.
 //
-// It is also a worked example: Module 5 narrates this file line by line. If you
-// are reading the lesson called "Dissecting this site's generate-pages.mjs",
-// this is the very script that produced the page in front of you. (Dogfooding!)
+// It is also a worked example: Module 5 narrates this file. If you are reading
+// the lesson "Dissecting this site's generate-pages.mjs", this is the very
+// script that produced the page in front of you. (Dogfooding!)
 //
 // What it does, end to end:
 //   1. Read course.json (the single source of truth for module/lesson order).
-//   2. For each lesson, read its Markdown source from content/<module>/<NN>-<slug>.md
+//   2. For each lesson, read its Markdown from content/<module>/<NN>-<slug>.md
 //   3. Render that Markdown to HTML, turning code fences into Monaco editors and
 //      "> [!NOTE]"-style blockquotes into styled callout boxes.
 //   4. Inject the HTML into templates/page.html, wiring up the breadcrumb,
-//      progress indicator, and Prev/Next buttons computed from the manifest.
-//   5. Write one .html file per lesson into site/lessons/, plus an index.html
-//      table of contents, and copy the static assets/ folder across.
+//      progress indicator, Prev/Next, reading time, and inlined nav data.
+//   5. Write one .html per lesson into site/lessons/, plus index.html, a 404
+//      page, and a search-index.json — and copy the static assets/ folder.
 //
-// Design rules we follow (and teach):
-//   - Zero framework dependencies. Only Node built-ins + one tiny library (marked).
-//   - The manifest is the source of truth, so navigation can never drift.
-//   - Deterministic: same input -> same output, every time.
-//   - Fails loudly with a non-zero exit code so CI catches problems.
+// Pure, side-effect-free helpers live in lib.mjs so they can be unit-tested
+// (Module 16.1) without running the build. This file does the I/O.
 // =============================================================================
 
 import { parseArgs } from 'node:util';
@@ -28,9 +25,17 @@ import { readFile, writeFile, mkdir, rm, cp, access } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { marked } from 'marked';
+import {
+  escapeHtml,
+  fill,
+  slugify,
+  stripToText,
+  readingTime,
+  summarize,
+  flatten,
+  navData,
+} from './lib.mjs';
 
-// __dirname does not exist in ESM, so we reconstruct it from import.meta.url.
-// This is the canonical Node-ESM idiom for "the folder this file lives in".
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..'); // repo root is one level up from tools/
 
@@ -60,32 +65,6 @@ Options:
 
 const OUT_DIR = join(ROOT, flags.out);
 
-// ---------------------------------------------------------------------------
-// 2. Small, dependency-free helpers.
-// ---------------------------------------------------------------------------
-
-/** HTML-escape text so it is safe inside attributes, <pre>, and <textarea>. */
-function escapeHtml(text) {
-  return text
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
-}
-
-/**
- * Fill a template's {{placeholders}} from a map. We use a replacer FUNCTION
- * (not a string) so that "$" characters inside values are treated literally —
- * String.prototype.replace gives "$" special meaning in string replacements,
- * which is a classic, hard-to-spot bug.
- */
-function fill(template, map) {
-  return template.replace(/{{\s*(\w+)\s*}}/g, (_, key) =>
-    key in map ? String(map[key]) : '',
-  );
-}
-
 /** Does a file exist? (access throws if not — we turn that into a boolean.) */
 async function exists(path) {
   try {
@@ -97,12 +76,8 @@ async function exists(path) {
 }
 
 // ---------------------------------------------------------------------------
-// 3. Configure the Markdown renderer.
-//    We override two token renderers: code fences -> Monaco blocks, and
-//    blockquotes -> callout boxes when they start with a "[!TYPE]" marker.
+// 2. Configure the Markdown renderer (code fences -> Monaco; callouts; ids).
 // ---------------------------------------------------------------------------
-
-// Map our friendly fence languages to Monaco's language identifiers.
 const MONACO_LANG = {
   sh: 'shell', bash: 'shell', shell: 'shell', zsh: 'shell',
   js: 'javascript', mjs: 'javascript', cjs: 'javascript', javascript: 'javascript',
@@ -117,7 +92,6 @@ const MONACO_LANG = {
   make: 'makefile', makefile: 'makefile', text: 'plaintext', txt: 'plaintext',
 };
 
-// Callout type -> { label shown in the box, CSS modifier class }.
 const CALLOUTS = {
   NOTE: { label: 'Note', cls: 'note' },
   TIP: { label: 'Tip', cls: 'tip' },
@@ -129,13 +103,6 @@ const CALLOUTS = {
 };
 
 const renderer = {
-  /**
-   * Code fences. `infostring` is everything after the opening ``` — e.g.
-   * "ts title=build-assets.ts". We split off the language and an optional
-   * "title=..." filename. The raw code is stored escaped in a <textarea>
-   * (the copy source + a graceful fallback); app.js mounts a Monaco editor
-   * into .monaco-host on first scroll into view.
-   */
   code(code, infostring = '') {
     const parts = infostring.trim().split(/\s+/);
     const langKey = (parts[0] || 'text').toLowerCase();
@@ -146,7 +113,6 @@ const renderer = {
     const filePill = filename
       ? `<span class="code-file">${escapeHtml(filename)}</span>`
       : '';
-
     return `<figure class="monaco-block" data-lang="${lang}" data-filename="${escapeHtml(filename)}">
   <figcaption class="code-caption">
     <span class="code-lang">${escapeHtml(langKey)}</span>${filePill}
@@ -161,18 +127,12 @@ const renderer = {
 </figure>\n`;
   },
 
-  /**
-   * Blockquotes. marked hands us the already-rendered inner HTML. If it begins
-   * with "[!TYPE]" we turn the whole quote into a styled <aside> callout;
-   * otherwise we emit a normal <blockquote>.
-   */
   blockquote(quoteHtml) {
     const marker = quoteHtml.match(/^\s*<p>\[!(\w+)\]\s*\n?/);
     if (marker) {
       const type = marker[1].toUpperCase();
       const meta = CALLOUTS[type];
       if (meta) {
-        // Strip the "[!TYPE]" token from the first paragraph.
         const inner = quoteHtml.replace(/^\s*<p>\[!\w+\]\s*\n?/, '<p>');
         return `<aside class="callout callout-${meta.cls}">
   <p class="callout-title">${meta.label}</p>
@@ -183,13 +143,8 @@ const renderer = {
     return `<blockquote>${quoteHtml}</blockquote>\n`;
   },
 
-  /** Headings get slug ids so lessons can deep-link to sections. */
   heading(text, level) {
-    const id = text
-      .toLowerCase()
-      .replace(/<[^>]+>/g, '')
-      .replace(/[^\w]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+    const id = slugify(text);
     return `<h${level} id="${id}">${text}</h${level}>\n`;
   },
 };
@@ -197,57 +152,21 @@ const renderer = {
 marked.use({ gfm: true, breaks: false, renderer });
 
 // ---------------------------------------------------------------------------
-// 4. Build the flat lesson list from the manifest, computing every value the
-//    template needs (index, paths, prev/next) ONCE so nothing can drift.
+// 3. Render a single lesson page. Returns its search-index entry.
 // ---------------------------------------------------------------------------
-function buildLessonGraph(course) {
-  const flat = [];
-  course.modules.forEach((mod, mi) => {
-    mod.lessons.forEach((lesson, li) => {
-      const lessonNum = li + 1;
-      const moduleNum = mi; // 00-orientation is module 0
-      const globalIndex = flat.length + 1; // 1-based for humans
-      const contentPath = join(
-        ROOT,
-        'content',
-        mod.id,
-        `${String(lessonNum).padStart(2, '0')}-${lesson.slug}.md`,
-      );
-      const outName = `${String(globalIndex).padStart(3, '0')}-${lesson.slug}.html`;
-      flat.push({
-        ...lesson,
-        module: mod,
-        moduleNum,
-        moduleTitle: mod.title,
-        lessonNum,
-        globalIndex,
-        contentPath,
-        outName,
-      });
-    });
-  });
-  // Wire prev/next now that the full ordered list exists.
-  flat.forEach((l, i) => {
-    l.prev = i > 0 ? flat[i - 1] : null;
-    l.next = i < flat.length - 1 ? flat[i + 1] : null;
-  });
-  return flat;
-}
-
-// ---------------------------------------------------------------------------
-// 5. Render a single lesson page.
-// ---------------------------------------------------------------------------
-async function renderLesson(lesson, total, pageTemplate, repoUrl) {
+async function renderLesson(lesson, total, pageTemplate, repoUrl, navJson) {
   let markdownSource;
-  if (await exists(lesson.contentPath)) {
-    markdownSource = await readFile(lesson.contentPath, 'utf8');
+  if (await exists(join(ROOT, lesson.contentRelPath))) {
+    markdownSource = await readFile(join(ROOT, lesson.contentRelPath), 'utf8');
   } else {
-    // The build never breaks just because a lesson isn't written yet.
     markdownSource = `# ${lesson.title}\n\n> [!NOTE]\n> This lesson is coming soon.`;
-    console.warn(`  (!) missing content: ${lesson.contentPath}`);
+    console.warn(`  (!) missing content: ${lesson.contentRelPath}`);
   }
 
   const body = marked.parse(markdownSource);
+  const plain = stripToText(markdownSource);
+  const minutes = readingTime(plain);
+  const description = summarize(plain, 155);
   const progressPercent = Math.round((lesson.globalIndex / total) * 100);
 
   const breadcrumb =
@@ -255,16 +174,9 @@ async function renderLesson(lesson, total, pageTemplate, repoUrl) {
     `<span class="sep">/</span> ${escapeHtml(lesson.moduleTitle)} ` +
     `<span class="sep">/</span> <span aria-current="page">${escapeHtml(lesson.title)}</span>`;
 
-  // Prev/Next: link to sibling files in the same lessons/ directory.
-  const prevAttrs = lesson.prev
-    ? `href="${lesson.prev.outName}"`
-    : `aria-disabled="true" tabindex="-1"`;
-  const nextAttrs = lesson.next
-    ? `href="${lesson.next.outName}"`
-    : `aria-disabled="true" tabindex="-1"`;
+  const prevAttrs = lesson.prev ? `href="${lesson.prev.outName}"` : `aria-disabled="true" tabindex="-1"`;
+  const nextAttrs = lesson.next ? `href="${lesson.next.outName}"` : `aria-disabled="true" tabindex="-1"`;
 
-  // Footer link: the runnable example for this lesson (if any), pointing at the
-  // file on GitHub so it resolves both locally and on the deployed site.
   const exampleFooter = lesson.example
     ? `<a class="footer-link" href="${repoUrl}/blob/main/${lesson.example}">View the example file: <code>${escapeHtml(
         lesson.example,
@@ -273,12 +185,18 @@ async function renderLesson(lesson, total, pageTemplate, repoUrl) {
 
   const html = fill(pageTemplate, {
     title: `Lesson ${lesson.globalIndex} — ${lesson.title}`,
+    description: escapeHtml(description),
     courseTitle: 'Custom Development Tooling',
     lessonTitle: escapeHtml(lesson.title),
     moduleTitle: escapeHtml(lesson.moduleTitle),
     breadcrumb,
     progressText: `Lesson ${lesson.globalIndex} of ${total}`,
     progressPercent,
+    readingTime: minutes,
+    outName: lesson.outName,
+    globalIndex: lesson.globalIndex,
+    total,
+    navData: navJson,
     body,
     prevAttrs,
     prevLabel: lesson.prev ? escapeHtml(lesson.prev.title) : 'Start of course',
@@ -290,25 +208,29 @@ async function renderLesson(lesson, total, pageTemplate, repoUrl) {
   });
 
   await writeFile(join(OUT_DIR, 'lessons', lesson.outName), html, 'utf8');
+
+  // The search-index entry (consumed by assets/app.js for full-text search).
+  return {
+    i: lesson.globalIndex,
+    o: lesson.outName,
+    t: lesson.title,
+    m: lesson.moduleTitle,
+    mn: lesson.moduleNum,
+    s: summarize(plain, 600),
+  };
 }
 
 // ---------------------------------------------------------------------------
-// 6. Render the index.html table of contents.
+// 4. Render the index.html table of contents.
 // ---------------------------------------------------------------------------
-async function renderIndex(course, flat, total, indexTemplate) {
-  const byModule = new Map();
-  for (const l of flat) {
-    if (!byModule.has(l.module.id)) byModule.set(l.module.id, []);
-    byModule.get(l.module.id).push(l);
-  }
-
+async function renderIndex(course, flat, total, indexTemplate, navJson) {
   let toc = '';
   course.modules.forEach((mod, mi) => {
-    const lessons = byModule.get(mod.id) || [];
+    const lessons = flat.filter((l) => l.moduleId === mod.id);
     const items = lessons
       .map(
         (l) =>
-          `      <li><a href="lessons/${l.outName}"><span class="toc-num">${l.globalIndex}</span> ${escapeHtml(
+          `      <li><a href="lessons/${l.outName}" data-out="${l.outName}"><span class="toc-num">${l.globalIndex}</span> ${escapeHtml(
             l.title,
           )}</a></li>`,
       )
@@ -324,11 +246,13 @@ ${items}
 
   const html = fill(indexTemplate, {
     title: course.title,
+    description: escapeHtml(course.subtitle || course.title),
     courseTitle: escapeHtml(course.title),
     subtitle: escapeHtml(course.subtitle || ''),
     edition: escapeHtml(course.edition || ''),
     total,
     toc,
+    navData: navJson,
     assets: 'assets',
     firstHref: flat.length ? `lessons/${flat[0].outName}` : '#',
   });
@@ -337,41 +261,75 @@ ${items}
 }
 
 // ---------------------------------------------------------------------------
-// 7. Main: orchestrate the whole build.
+// 5. Main: orchestrate the whole build.
 // ---------------------------------------------------------------------------
 async function main() {
   const t0 = performance.now();
   console.log(`Building course into ${flags.out}/ ...`);
 
   const course = JSON.parse(await readFile(join(ROOT, 'course.json'), 'utf8'));
-  const flat = buildLessonGraph(course);
+  const flat = flatten(course);
   const total = flat.length;
   const repoUrl = course.repoUrl ?? '';
+  const navJson = escapeHtml(JSON.stringify(navData(course, flat)));
 
   const pageTemplate = await readFile(join(ROOT, 'templates', 'page.html'), 'utf8');
   const indexTemplate = await readFile(join(ROOT, 'templates', 'index.html'), 'utf8');
 
-  // Clean output, then recreate the directory tree.
   await rm(OUT_DIR, { recursive: true, force: true });
   await mkdir(join(OUT_DIR, 'lessons'), { recursive: true });
-
-  // Copy static assets verbatim (CSS, JS).
   await cp(join(ROOT, 'assets'), join(OUT_DIR, 'assets'), { recursive: true });
 
-  // Render every lesson, then the index.
+  const searchEntries = [];
   for (const lesson of flat) {
-    await renderLesson(lesson, total, pageTemplate, repoUrl);
+    searchEntries.push(await renderLesson(lesson, total, pageTemplate, repoUrl, navJson));
   }
-  await renderIndex(course, flat, total, indexTemplate);
+  await renderIndex(course, flat, total, indexTemplate, navJson);
+
+  // Search index (full-text search, progressively enhanced over http).
+  await writeFile(
+    join(OUT_DIR, 'search-index.json'),
+    JSON.stringify({ title: course.title, total, lessons: searchEntries }),
+    'utf8',
+  );
+
+  // A friendly 404 page.
+  const notFound = fill(pageTemplate, {
+    title: 'Page not found',
+    description: 'Page not found',
+    courseTitle: 'Custom Development Tooling',
+    lessonTitle: '404',
+    moduleTitle: '',
+    breadcrumb: `<a href="./index.html">Home</a>`,
+    progressText: '',
+    progressPercent: 0,
+    readingTime: 0,
+    outName: '',
+    globalIndex: 0,
+    total,
+    navData: navJson,
+    body: `<h1>404 — Page not found</h1><p>That lesson doesn't exist. <a href="./index.html">Go to the course home</a>.</p>`,
+    prevAttrs: `aria-disabled="true" tabindex="-1"`,
+    prevLabel: '',
+    nextAttrs: `href="./index.html"`,
+    nextLabel: 'Course home',
+    exampleFooter: '',
+    assets: 'assets',
+    home: 'index.html',
+  });
+  await writeFile(join(OUT_DIR, '404.html'), notFound, 'utf8');
 
   const ms = Math.round(performance.now() - t0);
-  console.log(`Done: ${total} lessons + index in ${ms} ms -> ${flags.out}/index.html`);
+  console.log(`Done: ${total} lessons + index + search + 404 in ${ms} ms -> ${flags.out}/index.html`);
 }
 
-// Top-level await would also work, but wrapping main() lets us turn any error
-// into a clean, non-zero exit so CI fails loudly instead of printing a stack
-// trace and pretending to succeed.
-main().catch((err) => {
-  console.error('Build failed:', err);
-  process.exit(1);
-});
+// Run only when executed directly (the ESM equivalent of Python's __main__,
+// Module 6.1) — so importing this file (e.g. from tests) does NOT trigger a build.
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch((err) => {
+    console.error('Build failed:', err);
+    process.exit(1);
+  });
+}
+
+export { main };

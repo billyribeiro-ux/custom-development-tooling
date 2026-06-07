@@ -47,6 +47,9 @@ jobs:
       - name: Build the site
         run: node tools/generate-pages.mjs
 
+      - name: Unit tests
+        run: node --test tests/unit/*.test.mjs
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 

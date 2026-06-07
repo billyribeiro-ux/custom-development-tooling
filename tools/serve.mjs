@@ -33,8 +33,15 @@ const server = createServer(async (req, res) => {
     res.writeHead(200, { 'content-type': MIME[extname(filePath)] || 'application/octet-stream' });
     res.end(body);
   } catch {
-    res.writeHead(404, { 'content-type': 'text/html; charset=utf-8' });
-    res.end('<h1>404 Not Found</h1><p><a href="/">Go home</a></p>');
+    // Serve the generated 404 page if it exists (matches GitHub Pages behavior).
+    try {
+      const body = await readFile(join(ROOT, '404.html'));
+      res.writeHead(404, { 'content-type': 'text/html; charset=utf-8' });
+      res.end(body);
+    } catch {
+      res.writeHead(404, { 'content-type': 'text/html; charset=utf-8' });
+      res.end('<h1>404 Not Found</h1><p><a href="/">Go home</a></p>');
+    }
   }
 });
 
