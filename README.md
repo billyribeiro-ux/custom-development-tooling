@@ -4,9 +4,17 @@ A complete, beginner-friendly-but-principal-engineer-deep course on **custom dev
 the scripts and config files that build, test, run, and ship real software — and, crucially, how to
 build your own.
 
-It's delivered as static HTML pages (one per lesson) with **Next / Previous** navigation and
-**Monaco editors** (VS Code's engine) for every code block, so you can read, edit, and copy every
-snippet. **2026 edition.**
+It's delivered as static HTML pages (one per lesson) with **Monaco editors** (VS Code's engine) for
+every code block, so you can read, edit, and copy every snippet. **2026 edition.**
+
+It's a real course platform, not just a page sequence:
+
+- **Sidebar navigation** of all 19 modules / 107 lessons, with the current lesson highlighted
+- **Client-side search** (titles offline; full-text when served over http)
+- **Progress tracking** in `localStorage` — completion checkmarks, a "% complete" readout, and a Resume button
+- **On-this-page** outline with scrollspy, plus heading anchor links
+- **Light / dark theme toggle** (persisted), **Next / Previous** + arrow-key navigation, reading-time, SEO meta, and a 404 page
+- Works offline from `file://`; search is progressively enhanced when served
 
 > **Dogfooding:** this site is built by the very kind of tooling it teaches. The generator
 > (`tools/generate-pages.mjs`) turns Markdown + a manifest into the linked HTML you read — and it's
@@ -54,7 +62,8 @@ production gotchas, then a "build your own" recap so the skills transfer to what
 make build       # build the site with the Node generator (primary)
 make build-py    # build with the Python generator (proves the dogfood comparison)
 make serve       # build, then serve at http://localhost:8080
-make test        # build, then run the Playwright end-to-end tests
+make test-unit   # run the generator unit tests (node:test, no deps)
+make test        # build, run unit tests, then the Playwright end-to-end tests
 make lint        # lint shell (ShellCheck), Python (ruff), TypeScript (tsc)
 make clean       # remove the generated site/
 make help        # list every task

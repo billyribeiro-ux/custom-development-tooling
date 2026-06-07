@@ -187,6 +187,35 @@ def fill(template: str, mapping: dict[str, object]) -> str:
     return re.sub(r"{{\s*(\w+)\s*}}", lambda m: str(mapping.get(m.group(1), "")), template)
 
 
+def strip_to_text(md: str) -> str:
+    """Strip Markdown down to plain prose (for search summaries + reading time)."""
+    md = re.sub(r"```[\s\S]*?```", " ", md)
+    md = re.sub(r"`[^`]*`", " ", md)
+    md = re.sub(r"^>\s*\[![^\]]+\]\s*", " ", md, flags=re.MULTILINE)
+    md = re.sub(r"^[>#]+\s*", " ", md, flags=re.MULTILINE)
+    md = re.sub(r"^\s*[-*]\s+", " ", md, flags=re.MULTILINE)
+    md = re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", md)
+    md = re.sub(r"[*_~]+", "", md)
+    md = md.replace("|", " ")
+    md = re.sub(r"<[^>]+>", " ", md)
+    md = re.sub(r"&[a-z]+;", " ", md)
+    return re.sub(r"\s+", " ", md).strip()
+
+
+def reading_time(text: str) -> int:
+    words = len(text.split()) if text.strip() else 0
+    return max(1, round(words / 200))
+
+
+def summarize(text: str, n: int = 155) -> str:
+    t = text.strip()
+    if len(t) <= n:
+        return t
+    cut = t[:n]
+    sp = cut.rfind(" ")
+    return (cut[:sp] if sp > 0 else cut).strip() + "…"
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build the course site (Python port).")
     parser.add_argument("--out", default="site-py", help="output directory")
@@ -214,20 +243,38 @@ def main() -> None:
     total = len(flat)
     repo_url = course.get("repoUrl", "")
 
+    # Lightweight nav data inlined into every page (works offline).
+    nav = {
+        "modules": [{"n": i, "t": m["title"]} for i, m in enumerate(course["modules"])],
+        "lessons": [
+            {"i": x["globalIndex"], "o": x["outName"], "t": x["title"], "m": x["moduleNum"]}
+            for x in flat
+        ],
+    }
+    nav_json = html.escape(json.dumps(nav, ensure_ascii=False))
+
     if out_dir.exists():
         shutil.rmtree(out_dir)
     (out_dir / "lessons").mkdir(parents=True)
     shutil.copytree(ROOT / "assets", out_dir / "assets")
 
+    search_entries = []
     for idx, lesson in enumerate(flat):
         prev_l = flat[idx - 1] if idx > 0 else None
         next_l = flat[idx + 1] if idx < total - 1 else None
         if lesson["contentPath"].exists():
-            body = render_markdown(lesson["contentPath"].read_text())
+            source = lesson["contentPath"].read_text()
         else:
-            placeholder = f"# {lesson['title']}\n\n> [!NOTE]\n> This lesson is coming soon."
-            body = render_markdown(placeholder)
+            source = f"# {lesson['title']}\n\n> [!NOTE]\n> This lesson is coming soon."
             print(f"  (!) missing content: {lesson['contentPath']}")
+        body = render_markdown(source)
+        plain = strip_to_text(source)
+        minutes = reading_time(plain)
+        description = html.escape(summarize(plain, 155))
+        search_entries.append({
+            "i": lesson["globalIndex"], "o": lesson["outName"], "t": lesson["title"],
+            "m": lesson["module"]["title"], "mn": lesson["moduleNum"], "s": summarize(plain, 600),
+        })
 
         disabled = 'aria-disabled="true" tabindex="-1"'
         mod_title = html.escape(lesson["module"]["title"])
@@ -247,12 +294,18 @@ def main() -> None:
             example_footer = ""
         page = fill(page_tpl, {
             "title": f'Lesson {lesson["globalIndex"]} — {lesson["title"]}',
+            "description": description,
             "courseTitle": "Custom Development Tooling",
             "lessonTitle": title,
             "moduleTitle": mod_title,
             "breadcrumb": breadcrumb,
             "progressText": f'Lesson {lesson["globalIndex"]} of {total}',
             "progressPercent": round(lesson["globalIndex"] / total * 100),
+            "readingTime": minutes,
+            "outName": lesson["outName"],
+            "globalIndex": lesson["globalIndex"],
+            "total": total,
+            "navData": nav_json,
             "body": body,
             "prevAttrs": f'href="{prev_l["outName"]}"' if prev_l else disabled,
             "prevLabel": html.escape(prev_l["title"]) if prev_l else "Start of course",
@@ -269,7 +322,7 @@ def main() -> None:
     for mi, mod in enumerate(course["modules"]):
         lessons = [x for x in flat if x["module"]["id"] == mod["id"]]
         items = "\n".join(
-            f'      <li><a href="lessons/{x["outName"]}">'
+            f'      <li><a href="lessons/{x["outName"]}" data-out="{x["outName"]}">'
             f'<span class="toc-num">{x["globalIndex"]}</span> '
             f'{html.escape(x["title"])}</a></li>'
             for x in lessons
@@ -284,16 +337,37 @@ def main() -> None:
         )
     index = fill(index_tpl, {
         "title": course["title"],
+        "description": html.escape(course.get("subtitle", course["title"])),
         "courseTitle": html.escape(course["title"]),
         "subtitle": html.escape(course.get("subtitle", "")),
         "edition": html.escape(course.get("edition", "")),
         "total": total,
         "toc": toc,
+        "navData": nav_json,
         "assets": "assets",
         "firstHref": f'lessons/{flat[0]["outName"]}' if flat else "#",
     })
     (out_dir / "index.html").write_text(index)
-    print(f"Done: {total} lessons + index -> {args.out}/index.html")
+
+    # Search index (full-text search, progressively enhanced over http).
+    search_doc = {"title": course["title"], "total": total, "lessons": search_entries}
+    (out_dir / "search-index.json").write_text(json.dumps(search_doc, ensure_ascii=False))
+
+    # A friendly 404 page.
+    not_found = fill(page_tpl, {
+        "title": "Page not found", "description": "Page not found",
+        "courseTitle": "Custom Development Tooling", "lessonTitle": "404", "moduleTitle": "",
+        "breadcrumb": '<a href="./index.html">Home</a>', "progressText": "",
+        "progressPercent": 0, "readingTime": 0, "outName": "", "globalIndex": 0,
+        "total": total, "navData": nav_json,
+        "body": '<h1>404 — Page not found</h1><p>That lesson doesn\'t exist. '
+                '<a href="./index.html">Go to the course home</a>.</p>',
+        "prevAttrs": 'aria-disabled="true" tabindex="-1"', "prevLabel": "",
+        "nextAttrs": 'href="./index.html"', "nextLabel": "Course home",
+        "exampleFooter": "", "assets": "assets", "home": "index.html",
+    })
+    (out_dir / "404.html").write_text(not_found)
+    print(f"Done: {total} lessons + index + search + 404 -> {args.out}/index.html")
 
 
 if __name__ == "__main__":

@@ -65,10 +65,15 @@ A practical guide:
 
 ## Where this course focuses
 
-This course's tests are **E2E with Playwright** (Modules 16.2-16.7), because the thing we're verifying — *does the generated site's navigation actually work in a browser?* — is inherently end-to-end. You can't unit-test "clicking Next changes the page"; it requires a real browser loading real HTML and a real click. That's precisely the E2E sweet spot (Module 16.5).
+This course has **both** layers — a small, real testing pyramid:
+
+- **Unit tests** (`tests/unit/generator.test.mjs`, run with the built-in `node:test`) cover the generator's *pure logic*: `slugify`, `fill`, `stripToText`, reading-time, and especially `flatten`'s prev/next wiring (Module 5.7). Fast, precise, no filesystem.
+- **E2E tests with Playwright** (Modules 16.2-16.7) cover the *user journeys* that need a real browser: navigation, search, the theme toggle, progress tracking. You can't unit-test "clicking Next changes the page" — that's the E2E sweet spot (Module 16.5).
+
+This split is the pyramid in miniature (Module 16.1): push logic checks *down* to fast unit tests, reserve the slow browser tests for what genuinely needs the whole system.
 
 > [!DOGFOOD]
-> The course's `tests/e2e/nav.spec.ts` (Module 16.5) is E2E: it opens the built site in a real browser, clicks Previous/Next, and asserts the page changed and the progress text updated. That's a *critical user journey* for a course (navigation must work!) and genuinely requires the whole system — exactly when E2E earns its cost. A pure static site like this has little complex *logic* to unit-test, so its suite is appropriately E2E-heavy — the right balance *for this project's shape*.
+> The course's `tests/unit/generator.test.mjs` unit-tests the generator's pure helpers (it imports them from `tools/lib.mjs` — which is *why* those functions were extracted there, Module 5.7), while `tests/e2e/nav.spec.ts` and `tests/e2e/features.spec.ts` (Module 16.5) drive a real browser to verify navigation, search, theme, and progress. `make test` runs both layers; CI runs both on every push. That's a proper pyramid — fast unit tests for logic, a few E2E tests for the critical flows.
 
 > [!TRY]
 > For an app you know, classify three things to test by level: a utility function (unit), saving-and-loading data (integration), and a key user flow like login (E2E). Notice how the unit one is fast and precise, the E2E one is slow but proves the real thing works. That classification skill *is* the pyramid.

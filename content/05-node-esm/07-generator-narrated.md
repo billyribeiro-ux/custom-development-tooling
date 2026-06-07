@@ -17,9 +17,10 @@ import { readFile, writeFile, mkdir, rm, cp, access } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { marked } from 'marked';
+import { escapeHtml, fill, slugify, stripToText, readingTime, summarize, flatten, navData } from './lib.mjs';
 ```
 
-Notice: almost everything is a `node:` built-in (Module 5.2) — `util`, `fs/promises`, `path`, `url`. The *only* npm dependency is `marked`, the Markdown parser. One dependency for the whole build (Module 1: minimize dependencies for reliability).
+Notice: almost everything is a `node:` built-in (Module 5.2) — `util`, `fs/promises`, `path`, `url`. The *only* npm dependency is `marked`, the Markdown parser. One dependency for the whole build (Module 1: minimize dependencies for reliability). The last import pulls in the **pure helper functions** from a sibling `lib.mjs` — they're separated out (Module 1.5: pure logic apart from effects) precisely so they can be **unit-tested** in isolation (Module 16.1); see `tests/unit/generator.test.mjs`.
 
 ```javascript title=generate-pages.mjs
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -44,11 +45,13 @@ if (flags.help) { console.log(`...usage...`); process.exit(0); }
 
 `parseArgs` (Module 4.3) with sensible defaults, and a `--help` that exits 0. The interface from Module 4.1, implemented.
 
-## Two small, sharp helpers
+## Two small, sharp helpers (now in lib.mjs)
 
-```javascript title=generate-pages.mjs
-function escapeHtml(text) {
-  return text.replaceAll('&', '&amp;').replaceAll('<', '&lt;')
+These pure functions live in `tools/lib.mjs` (imported above) so the unit tests can exercise them directly — but they're worth reading here.
+
+```javascript title=tools/lib.mjs
+export function escapeHtml(text) {
+  return String(text).replaceAll('&', '&amp;').replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
 }
 ```
@@ -100,14 +103,16 @@ This is the "config over code" idea (Module 4.3): `marked` does the heavy liftin
 
 ## Building the lesson graph (the heart of navigation)
 
-```javascript title=generate-pages.mjs
-function buildLessonGraph(course) {
+This pure function also lives in `lib.mjs` (so it's unit-tested, Module 16.1):
+
+```javascript title=tools/lib.mjs
+export function flatten(course) {
   const flat = [];
   course.modules.forEach((mod, mi) => {
     mod.lessons.forEach((lesson, li) => {
       const globalIndex = flat.length + 1;
-      flat.push({ ...lesson, module: mod, moduleNum: mi, lessonNum: li + 1,
-        globalIndex, contentPath: /* derived */, outName: /* derived */ });
+      flat.push({ ...lesson, moduleNum: mi, lessonNum: li + 1,
+        globalIndex, contentRelPath: /* derived */, outName: /* derived */ });
     });
   });
   flat.forEach((l, i) => {
@@ -118,7 +123,7 @@ function buildLessonGraph(course) {
 }
 ```
 
-This is *why the navigation can never drift* (Module 0.4). We flatten all modules into one ordered list, assign each lesson a `globalIndex`, derive its content path and output filename, then wire each lesson's `prev`/`next` to its neighbors in the list. Reorder lessons in `course.json`, rebuild, and every Prev/Next link and progress number updates automatically. **The manifest is the single source of truth; the script computes everything else.**
+This is *why the navigation can never drift* (Module 0.4). We flatten all modules into one ordered list, assign each lesson a `globalIndex`, derive its content path and output filename, then wire each lesson's `prev`/`next` to its neighbors in the list. Reorder lessons in `course.json`, rebuild, and every Prev/Next link and progress number updates automatically. **The manifest is the single source of truth; the script computes everything else.** Because `flatten` is pure, `tests/unit/generator.test.mjs` verifies the prev/next wiring (including the first/last boundaries) without any filesystem — a fast, precise unit test (Module 16.1).
 
 ## Rendering one lesson
 
@@ -146,24 +151,31 @@ For each lesson: read its Markdown (or a graceful "coming soon" placeholder if m
 ```javascript title=generate-pages.mjs
 async function main() {
   const course = JSON.parse(await readFile(join(ROOT, 'course.json'), 'utf8'));
-  const flat = buildLessonGraph(course);
+  const flat = flatten(course);                          // from lib.mjs
   const pageTemplate = await readFile(join(ROOT, 'templates', 'page.html'), 'utf8');
 
   await rm(OUT_DIR, { recursive: true, force: true });   // clean output (idempotent)
   await mkdir(join(OUT_DIR, 'lessons'), { recursive: true });
   await cp(join(ROOT, 'assets'), join(OUT_DIR, 'assets'), { recursive: true });
 
-  for (const lesson of flat) await renderLesson(lesson, flat.length, pageTemplate);
-  await renderIndex(course, flat, flat.length, indexTemplate);
+  const searchEntries = [];
+  for (const lesson of flat) searchEntries.push(await renderLesson(lesson, flat.length, pageTemplate, ...));
+  await renderIndex(course, flat, flat.length, indexTemplate, navJson);
+  await writeFile('search-index.json', JSON.stringify({ lessons: searchEntries }));  // for search
+  await writeFile('404.html', /* rendered 404 */);                                    // friendly 404
 }
 
-main().catch((err) => {
-  console.error('Build failed:', err);
-  process.exit(1);
-});
+// Run only when executed directly — the ESM equivalent of Python's __main__
+// (Module 6.1) — so importing this file for tests does NOT trigger a build:
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch((err) => {
+    console.error('Build failed:', err);
+    process.exit(1);
+  });
+}
 ```
 
-`main` reads the manifest and template, **cleans the output directory** (so every build starts fresh — deterministic, no stale files; Module 1.4), copies the static assets, then renders every lesson and the index. The file ends with the `main().catch()` pattern from Module 5.5: any failure prints an error and exits non-zero, so CI refuses to deploy a broken build.
+`main` reads the manifest and template, **cleans the output directory** (so every build starts fresh — deterministic, no stale files; Module 1.4), copies the static assets, renders every lesson and the index, and finally writes a **`search-index.json`** (powering the sidebar search in `app.js`) and a friendly **`404.html`**. It uses the `main().catch()` pattern from Module 5.5: any failure prints an error and exits non-zero, so CI refuses to deploy a broken build. Note the entry point is *guarded* by `import.meta.url === ...` — the ESM equivalent of Python's `__main__` (Module 6.1) — so importing the file from a unit test doesn't kick off a build.
 
 Note the lesson loop is *sequential* (`for...of` with `await`). It could be parallelized with `Promise.all` (Module 5.5), but at under 100 ms for 107 pages, the simplicity wins — a deliberate "don't optimize what's already fast enough" call.
 
@@ -173,9 +185,9 @@ Step back and see how everything fits:
 
 ```text title=the-whole-system
 course.json ─┐
-content/*.md ─┼─> buildLessonGraph ─> renderLesson (marked + fill) ─> site/*.html
-templates/   ─┘                          │
-assets/ ────────────── cp ──────────────┘──────────────────────────> site/assets/
+content/*.md ─┼─> flatten ─> renderLesson (marked + fill) ─> site/*.html + search-index.json + 404.html
+templates/   ─┘                   │
+assets/ ────────────── cp ────────┘──────────────────────────────────> site/assets/
 ```
 
 That's a complete static-site generator in ~250 well-commented lines, built from Node built-ins plus one dependency. You now understand every part — and you have a blueprint for building your own generator for *anything*: docs, a blog, a report dashboard. Change the manifest shape, change the template, change the renderer; the architecture stays the same.
@@ -186,6 +198,6 @@ That's a complete static-site generator in ~250 well-commented lines, built from
 > [!KEY]
 > - The generator is "**read, transform, write**" at scale: manifest + Markdown + template → linked HTML, in ~250 lines.
 > - It uses **only `node:` built-ins plus `marked`** — minimal dependencies for reliability.
-> - **`buildLessonGraph`** flattens the manifest and wires prev/next, so **navigation can never drift** — the manifest is the single source of truth.
+> - **`flatten`** (a pure function in `lib.mjs`, unit-tested) wires prev/next from the manifest, so **navigation can never drift** — the manifest is the single source of truth.
 > - A **custom `marked` renderer** produces the Monaco code blocks and callouts — *extending* a parser, not writing one ("config over code").
 > - `main().catch(... exit(1))`, a clean output dir each build, and graceful placeholders for missing content make it robust and incrementally buildable. **You can now build your own generator for anything.**

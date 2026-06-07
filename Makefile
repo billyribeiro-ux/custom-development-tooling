@@ -9,7 +9,7 @@ SHELL := bash
 .SHELLFLAGS := -eu -o pipefail -c
 
 # .PHONY tells Make these targets are commands, not files to build/check.
-.PHONY: help install build build-py serve test lint clean
+.PHONY: help install build build-py serve test test-unit lint clean
 
 # The default target (first one) prints help.
 help: ## Show this help
@@ -29,7 +29,10 @@ build-py: ## Build the site with the Python generator (study artifact)
 serve: build ## Build, then serve the site at http://localhost:8080
 	node tools/serve.mjs
 
-test: build ## Build, then run the Playwright end-to-end tests
+test-unit: ## Run the generator unit tests (node:test)
+	node --test tests/unit/*.test.mjs
+
+test: build test-unit ## Build, run unit tests, then the Playwright end-to-end tests
 	npx playwright test
 
 lint: ## Lint shell, Python, and TypeScript (best-effort; skips missing tools)

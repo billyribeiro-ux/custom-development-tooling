@@ -3,48 +3,71 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="{{description}}" />
+  <meta name="theme-color" content="#0d1117" />
   <title>{{title}} · {{courseTitle}}</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230d1117'/%3E%3Ctext x='50' y='72' font-size='58' text-anchor='middle' fill='%237ee787' font-family='monospace' font-weight='bold'%3E%26gt;_%3C/text%3E%3C/svg%3E" />
+  <!-- Set the theme before paint to avoid a flash of the wrong theme. -->
+  <script>try{var t=localStorage.getItem('cdt-theme');if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
   <link rel="stylesheet" href="{{assets}}/styles.css" />
-  <!-- Monaco editor loader (VS Code's engine), from CDN. app.js configures and
-       lazy-mounts editors so learners can read, edit, and copy every snippet. -->
+  <!-- Monaco editor loader (VS Code's engine), from CDN. app.js lazy-mounts editors. -->
   <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.js"></script>
   <script defer src="{{assets}}/app.js"></script>
 </head>
-<body>
+<body data-out="{{outName}}" data-index="{{globalIndex}}" data-total="{{total}}" data-nav="{{navData}}">
   <a class="skip-link" href="#content">Skip to content</a>
 
   <header class="site-header">
+    <button class="menu-toggle" id="menu-toggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
     <a class="brand" href="{{home}}">{{courseTitle}}</a>
     <span class="module-label">{{moduleTitle}}</span>
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle light/dark theme" title="Toggle theme (t)">🌙</button>
   </header>
 
   <div class="progress" role="progressbar" aria-label="Course progress">
     <div class="progress-bar" style="width: {{progressPercent}}%"></div>
   </div>
 
-  <nav class="breadcrumb" aria-label="Breadcrumb">{{breadcrumb}}</nav>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="Course navigation">
+      <div class="sidebar-inner">
+        <input id="search" class="search-input" type="search" placeholder="Search lessons…  ( / )" autocomplete="off" />
+        <div id="search-results" class="search-results" hidden></div>
+        <p class="course-progress" id="course-progress"></p>
+        <nav class="sidebar-nav" id="sidebar-nav" aria-label="Course contents"></nav>
+      </div>
+    </aside>
+    <div class="sidebar-overlay" id="sidebar-overlay" hidden></div>
 
-  <main id="content" class="lesson">
-    <p class="progress-text">{{progressText}}</p>
-    <article class="lesson-body">
-      {{body}}
-    </article>
+    <main id="content" class="lesson">
+      <nav class="breadcrumb" aria-label="Breadcrumb">{{breadcrumb}}</nav>
+      <p class="lesson-meta">
+        <span class="progress-text">{{progressText}}</span>
+        <span class="reading-time"> · {{readingTime}} min read</span>
+      </p>
 
-    <nav class="pager" aria-label="Lesson navigation">
-      <a class="pager-prev" {{prevAttrs}}>
-        <span class="pager-dir">&larr; Previous</span>
-        <span class="pager-title">{{prevLabel}}</span>
-      </a>
-      <a class="pager-next" {{nextAttrs}}>
-        <span class="pager-dir">Next &rarr;</span>
-        <span class="pager-title">{{nextLabel}}</span>
-      </a>
-    </nav>
-  </main>
+      <article class="lesson-body">
+        {{body}}
+      </article>
 
-  <footer class="site-footer">
-    {{exampleFooter}}
-    <p class="footer-meta">Use &larr; / &rarr; arrow keys to turn the page.</p>
-  </footer>
+      <nav class="pager" aria-label="Lesson navigation">
+        <a class="pager-prev" {{prevAttrs}}>
+          <span class="pager-dir">&larr; Previous</span>
+          <span class="pager-title">{{prevLabel}}</span>
+        </a>
+        <a class="pager-next" {{nextAttrs}}>
+          <span class="pager-dir">Next &rarr;</span>
+          <span class="pager-title">{{nextLabel}}</span>
+        </a>
+      </nav>
+
+      <footer class="lesson-footer">
+        {{exampleFooter}}
+        <p class="footer-meta">Keyboard: &larr; / &rarr; turn the page · <kbd>/</kbd> search · <kbd>t</kbd> theme</p>
+      </footer>
+    </main>
+
+    <nav class="on-this-page" id="on-this-page" aria-label="On this page"></nav>
+  </div>
 </body>
 </html>

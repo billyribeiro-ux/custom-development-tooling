@@ -12,6 +12,7 @@
     "build:py": "python3 tools/generate-pages.py",
     "clean": "node --eval \"import('node:fs').then(fs => fs.rmSync('site', { recursive: true, force: true }))\"",
     "serve": "node tools/serve.mjs",
+    "test:unit": "node --test tests/unit/*.test.mjs",
     "test:e2e": "playwright test"
   },
   "keywords": [
