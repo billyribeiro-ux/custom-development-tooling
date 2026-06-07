@@ -243,6 +243,20 @@
         { "slug": "step7-ci-e2e", "title": "Step 7 — GitHub Actions CI + Playwright E2E" },
         { "slug": "review", "title": "Capstone Review, Checklist, and Where to Go Next" }
       ]
+    },
+    {
+      "id": "19-mastery",
+      "title": "Mastery: The Distinguished Engineer's Lens",
+      "blurb": "Going deeper — the systems thinking, trade-offs, and judgment that separate senior from principal.",
+      "lessons": [
+        { "slug": "hermetic-builds", "title": "Hermetic & Reproducible Builds: Correctness Over Convenience" },
+        { "slug": "economics-of-tooling", "title": "The Economics of Tooling: Leverage, Toil, and Platforms" },
+        { "slug": "supply-chain-security", "title": "Supply-Chain Security: Trusting Your Dependencies" },
+        { "slug": "zero-downtime-migrations", "title": "Zero-Downtime Migrations: The Expand/Contract Pattern" },
+        { "slug": "observability-at-scale", "title": "Observability & Operating Tooling at Scale" },
+        { "slug": "tooling-as-product", "title": "Tooling as a Product: DX, Golden Paths, and Hyrum's Law" },
+        { "slug": "operating-model", "title": "The Distinguished Engineer's Operating Model" }
+      ]
     }
   ]
 }

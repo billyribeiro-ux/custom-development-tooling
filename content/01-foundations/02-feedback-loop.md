@@ -63,7 +63,7 @@ So when you build tooling, optimize for both: *fast* and *trustworthy*. A slower
 Senior engineers obsessively measure and attack their own feedback loops. They'll ask: "What's the slowest thing I do ten times a day, and how do I make it ten times faster?" That single question, asked repeatedly, is most of what separates a 10x-effective engineer from an average one. It's not typing speed — it's loop speed.
 
 > [!DOGFOOD]
-> This course's generator builds all 107 pages in under 100 milliseconds. That speed is deliberate: a fast build means the author can change a lesson and see the result instantly. If it took 30 seconds, writing the course would be painful and slow.
+> This course's generator builds all 114 pages in under 100 milliseconds. That speed is deliberate: a fast build means the author can change a lesson and see the result instantly. If it took 30 seconds, writing the course would be painful and slow.
 
 > [!TRY]
 > Time your own feedback loop for something you do often. How long from "save the file" to "know if it worked"? Just measuring it is the first step to improving it.

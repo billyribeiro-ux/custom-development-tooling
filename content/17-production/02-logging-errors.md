@@ -26,7 +26,7 @@ console.error(`Done: ${total} pages in ${ms}ms`);          // summary (closes th
 ```
 
 > [!DOGFOOD]
-> The course's generator (Module 5.7) does exactly this: `Building course into site/...`, a warning per missing lesson, and `Done: 107 lessons + index in 91 ms`. You always know it started, what it skipped, and that it finished — with timing. That closing summary (Module 1.2) confirms success at a glance.
+> The course's generator (Module 5.7) does exactly this: `Building course into site/...`, a warning per missing lesson, and `Done: 114 lessons + index in 91 ms`. You always know it started, what it skipped, and that it finished — with timing. That closing summary (Module 1.2) confirms success at a glance.
 
 ## Log levels: control the verbosity
 
@@ -104,7 +104,7 @@ For tools that run *unattended* (in CI, on a schedule), you can't watch them —
 
 ```javascript title=structured-log.mjs
 // Structured (JSON) log line — easy for log aggregators to parse and query:
-console.error(JSON.stringify({ level: 'info', ts: new Date().toISOString(), msg: 'build complete', pages: 107 }));
+console.error(JSON.stringify({ level: 'info', ts: new Date().toISOString(), msg: 'build complete', pages: 114 }));
 ```
 
 > [!NOTE]

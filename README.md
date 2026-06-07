@@ -9,7 +9,7 @@ every code block, so you can read, edit, and copy every snippet. **2026 edition.
 
 It's a real course platform, not just a page sequence:
 
-- **Sidebar navigation** of all 19 modules / 107 lessons, with the current lesson highlighted
+- **Sidebar navigation** of all 20 modules / 114 lessons, with the current lesson highlighted
 - **Client-side search** (titles offline; full-text when served over http)
 - **Progress tracking** in `localStorage` — completion checkmarks, a "% complete" readout, and a Resume button
 - **On-this-page** outline with scrollspy, plus heading anchor links
@@ -32,7 +32,7 @@ Or open `site/index.html` directly in a browser after building. Run `make help` 
 
 ## What it covers
 
-107 lessons across 19 modules, covering every file type that controls a real project:
+114 lessons across 20 modules, covering every file type that controls a real project:
 
 `.sh` · `.mjs` · `.py` · `.ts` · `.sql` · `.json` · `.env` · `.toml` · `.yml` · `Makefile` ·
 `Dockerfile` · `docker-compose.yml` · `*.config.mjs` — plus **end-to-end testing with Playwright**

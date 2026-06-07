@@ -7,7 +7,7 @@ This is the lesson the whole course has been building toward: a complete, line-b
 
 ## The job, restated
 
-Turn a manifest (`course.json`) plus a folder of Markdown into linked HTML pages, with correct Previous/Next navigation and progress on every page. It's the "read, transform, write" pattern (Module 0.4) at a real scale: 107 pages in under 100 ms.
+Turn a manifest (`course.json`) plus a folder of Markdown into linked HTML pages, with correct Previous/Next navigation and progress on every page. It's the "read, transform, write" pattern (Module 0.4) at a real scale: 114 pages in under 100 ms.
 
 ## Imports: built-ins plus one dependency
 
@@ -177,7 +177,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
 `main` reads the manifest and template, **cleans the output directory** (so every build starts fresh — deterministic, no stale files; Module 1.4), copies the static assets, renders every lesson and the index, and finally writes a **`search-index.json`** (powering the sidebar search in `app.js`) and a friendly **`404.html`**. It uses the `main().catch()` pattern from Module 5.5: any failure prints an error and exits non-zero, so CI refuses to deploy a broken build. Note the entry point is *guarded* by `import.meta.url === ...` — the ESM equivalent of Python's `__main__` (Module 6.1) — so importing the file from a unit test doesn't kick off a build.
 
-Note the lesson loop is *sequential* (`for...of` with `await`). It could be parallelized with `Promise.all` (Module 5.5), but at under 100 ms for 107 pages, the simplicity wins — a deliberate "don't optimize what's already fast enough" call.
+Note the lesson loop is *sequential* (`for...of` with `await`). It could be parallelized with `Promise.all` (Module 5.5), but at under 100 ms for 114 pages, the simplicity wins — a deliberate "don't optimize what's already fast enough" call.
 
 ## The complete picture
 
@@ -193,7 +193,7 @@ assets/ ────────────── cp ────────�
 That's a complete static-site generator in ~250 well-commented lines, built from Node built-ins plus one dependency. You now understand every part — and you have a blueprint for building your own generator for *anything*: docs, a blog, a report dashboard. Change the manifest shape, change the template, change the renderer; the architecture stays the same.
 
 > [!TRY]
-> In the repo, open `course.json` and swap the order of two lessons within a module. Run `node tools/generate-pages.mjs`, then open the affected pages and check the Previous/Next links and the "Lesson N of 107" — they updated automatically, with you touching only the manifest. That's the payoff of a single source of truth.
+> In the repo, open `course.json` and swap the order of two lessons within a module. Run `node tools/generate-pages.mjs`, then open the affected pages and check the Previous/Next links and the "Lesson N of 114" — they updated automatically, with you touching only the manifest. That's the payoff of a single source of truth.
 
 > [!KEY]
 > - The generator is "**read, transform, write**" at scale: manifest + Markdown + template → linked HTML, in ~250 lines.

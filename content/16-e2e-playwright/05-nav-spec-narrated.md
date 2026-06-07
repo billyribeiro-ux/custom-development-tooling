@@ -29,7 +29,7 @@ Navigate to the home page (`/` resolves via `baseURL`, Module 16.3), then assert
 ```typescript title=nav.spec.ts
 test('the first lesson disables Previous and enables Next', async ({ page }) => {
   await page.goto('/lessons/001-welcome.html');
-  await expect(page.locator('.progress-text')).toHaveText('Lesson 1 of 107');
+  await expect(page.locator('.progress-text')).toHaveText('Lesson 1 of 114');
 
   const prev = page.locator('.pager-prev');
   await expect(prev).toHaveAttribute('aria-disabled', 'true');
@@ -41,7 +41,7 @@ test('the first lesson disables Previous and enables Next', async ({ page }) => 
 
 This verifies the *edge case* the generator handles (Module 5.7): the **first** lesson has no previous page. It asserts:
 
-- The progress text reads `Lesson 1 of 107` — confirming the progress computation.
+- The progress text reads `Lesson 1 of 114` — confirming the progress computation.
 - `.pager-prev` has `aria-disabled="true"` — the generator disables Previous on lesson 1 (you saw this in the generated HTML way back in Phase 1).
 - `.pager-next` links to a `002-` page — Next points to lesson 2.
 
@@ -53,10 +53,10 @@ Testing edge cases (first/last) is crucial — they're where off-by-one bugs hid
 test('Next and Previous buttons actually move between lessons', async ({ page }) => {
   await page.goto('/lessons/001-welcome.html');
   await page.locator('.pager-next').click();
-  await expect(page.locator('.progress-text')).toHaveText('Lesson 2 of 107');
+  await expect(page.locator('.progress-text')).toHaveText('Lesson 2 of 114');
 
   await page.locator('.pager-prev').click();
-  await expect(page.locator('.progress-text')).toHaveText('Lesson 1 of 107');
+  await expect(page.locator('.progress-text')).toHaveText('Lesson 1 of 114');
 });
 ```
 
@@ -68,9 +68,9 @@ This is the core *behavioral* test (Module 16.4's navigate → act → assert): 
 test('arrow keys turn the page', async ({ page }) => {
   await page.goto('/lessons/001-welcome.html');
   await page.keyboard.press('ArrowRight');
-  await expect(page.locator('.progress-text')).toHaveText('Lesson 2 of 107');
+  await expect(page.locator('.progress-text')).toHaveText('Lesson 2 of 114');
   await page.keyboard.press('ArrowLeft');
-  await expect(page.locator('.progress-text')).toHaveText('Lesson 1 of 107');
+  await expect(page.locator('.progress-text')).toHaveText('Lesson 1 of 114');
 });
 ```
 
@@ -93,12 +93,12 @@ This checks that the Monaco code blocks (the editors you've been using) render, 
 
 ```typescript title=nav.spec.ts
 test('the last lesson disables Next', async ({ page }) => {
-  await page.goto('/lessons/107-review.html');
+  await page.goto('/lessons/114-operating-model.html');
   await expect(page.locator('.pager-next')).toHaveAttribute('aria-disabled', 'true');
 });
 ```
 
-The mirror of Test 2: the **last** lesson (107) has no next page, so `.pager-next` is disabled. Together, Tests 2 and 6 verify *both* boundaries of the navigation — the first page can't go back, the last can't go forward. Boundary testing at both ends.
+The mirror of Test 2: the **last** lesson (114) has no next page, so `.pager-next` is disabled. Together, Tests 2 and 6 verify *both* boundaries of the navigation — the first page can't go back, the last can't go forward. Boundary testing at both ends.
 
 ## What this suite demonstrates
 

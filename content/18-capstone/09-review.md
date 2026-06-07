@@ -65,6 +65,7 @@ You now have the foundation. To deepen it:
 - **Read others' tooling.** Open the `Makefile`, `package.json` scripts, and CI of projects you admire on GitHub. You can now *read* them fluently. Steal good patterns.
 - **Go deeper where you specialize.** Each module is a doorway: advanced bash, Playwright's full API, Kubernetes (beyond compose, Module 14.4), observability platforms (beyond logging, Module 17.2), monorepo tooling, build systems like Bazel.
 - **Stay current.** Tooling evolves (this is the 2026 edition). The *principles* are stable, but the *tools* improve — new Node built-ins, faster linters, better runners. Re-evaluate periodically (Module 11.6's "don't over-optimize, but do reassess").
+- **Take the mastery track.** When you're ready to go deeper, **Module 19 — Mastery: The Distinguished Engineer's Lens** revisits these topics at principal level: hermetic/reproducible builds, the economics of tooling and leverage, supply-chain security, zero-downtime migrations, observability and DORA, tooling-as-a-product, and the operating model that ties it all together.
 
 > [!TIP]
 > The mark of a principal-level engineer isn't knowing every tool — it's the *instinct* for when a manual process should become a script, which language fits, how to make it reproducible, and how to compose it into the system. You've built that instinct by building real things. Trust it, keep building, and your tooling will keep getting better. The leverage compounds (Module 1.2).

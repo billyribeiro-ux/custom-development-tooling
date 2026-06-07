@@ -100,7 +100,7 @@ test('the home page links to the first lesson', async ({ page }) => {
   await page.goto('/');                                            // navigate (uses baseURL)
   await expect(page).toHaveTitle(/Custom Development Tooling/);     // assert the title
   await page.getByRole('link', { name: /Start the course/ }).click();  // act: click the link
-  await expect(page.locator('.progress-text')).toHaveText('Lesson 1 of 107');  // assert we arrived
+  await expect(page.locator('.progress-text')).toHaveText('Lesson 1 of 114');  // assert we arrived
 });
 ```
 
@@ -110,7 +110,7 @@ Read it as navigate → assert → act → assert. Every line `await`ed, semanti
 > This is essentially one of the tests in the course's `tests/e2e/nav.spec.ts` (Module 16.5). It uses `getByRole('link', { name: /Start the course/ })` (a semantic locator), `toHaveTitle` and `toHaveText` (auto-retrying assertions), and the `baseURL` from the config (Module 16.3) so `goto('/')` resolves to the served site. Open the spec to see more like it.
 
 > [!TRY]
-> Write a spec that goes to `/lessons/001-welcome.html`, asserts `.progress-text` has text `Lesson 1 of 107`, clicks the Next link (`getByRole('link', { name: /Next/ })`), and asserts the text changed to `Lesson 2 of 107`. Run it with `npx playwright test`. You'll have written a real E2E test using locators, actions, and auto-waiting assertions.
+> Write a spec that goes to `/lessons/001-welcome.html`, asserts `.progress-text` has text `Lesson 1 of 114`, clicks the Next link (`getByRole('link', { name: /Next/ })`), and asserts the text changed to `Lesson 2 of 114`. Run it with `npx playwright test`. You'll have written a real E2E test using locators, actions, and auto-waiting assertions.
 
 > [!KEY]
 > - A **spec** follows **navigate → act → assert**; every browser action is `async`/`await`ed (Module 5.5).

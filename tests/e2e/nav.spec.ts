@@ -3,7 +3,7 @@
 // Module 16. These run against the REAL built site in a REAL browser, exactly
 // as a learner experiences it. They are the safety net that proves the
 // generator wired Prev/Next, the progress indicator, and the home page
-// correctly across all 107 pages.
+// correctly across all 114 pages.
 // =============================================================================
 import { test, expect } from '@playwright/test';
 
@@ -17,7 +17,7 @@ test('home page lists the course and links to the first lesson', async ({ page }
 
 test('the first lesson disables Previous and enables Next', async ({ page }) => {
   await page.goto('/lessons/001-welcome.html');
-  await expect(page.locator('.progress-text')).toHaveText('Lesson 1 of 107');
+  await expect(page.locator('.progress-text')).toHaveText('Lesson 1 of 114');
 
   // Prev is disabled on the very first page (no href, aria-disabled).
   const prev = page.locator('.pager-prev');
@@ -31,18 +31,18 @@ test('the first lesson disables Previous and enables Next', async ({ page }) => 
 test('Next and Previous buttons actually move between lessons', async ({ page }) => {
   await page.goto('/lessons/001-welcome.html');
   await page.locator('.pager-next').click();
-  await expect(page.locator('.progress-text')).toHaveText('Lesson 2 of 107');
+  await expect(page.locator('.progress-text')).toHaveText('Lesson 2 of 114');
 
   await page.locator('.pager-prev').click();
-  await expect(page.locator('.progress-text')).toHaveText('Lesson 1 of 107');
+  await expect(page.locator('.progress-text')).toHaveText('Lesson 1 of 114');
 });
 
 test('arrow keys turn the page', async ({ page }) => {
   await page.goto('/lessons/001-welcome.html');
   await page.keyboard.press('ArrowRight');
-  await expect(page.locator('.progress-text')).toHaveText('Lesson 2 of 107');
+  await expect(page.locator('.progress-text')).toHaveText('Lesson 2 of 114');
   await page.keyboard.press('ArrowLeft');
-  await expect(page.locator('.progress-text')).toHaveText('Lesson 1 of 107');
+  await expect(page.locator('.progress-text')).toHaveText('Lesson 1 of 114');
 });
 
 test('every lesson has working code blocks with a copy button', async ({ page }) => {
@@ -53,7 +53,7 @@ test('every lesson has working code blocks with a copy button', async ({ page })
 });
 
 test('the last lesson disables Next', async ({ page }) => {
-  // 107 lessons total; the last file is 107-review.html.
-  await page.goto('/lessons/107-review.html');
+  // 114 lessons total; the last file is 114-operating-model.html.
+  await page.goto('/lessons/114-operating-model.html');
   await expect(page.locator('.pager-next')).toHaveAttribute('aria-disabled', 'true');
 });

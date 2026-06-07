@@ -8,8 +8,8 @@ import { test, expect } from '@playwright/test';
 
 test('the sidebar lists every module and highlights the current lesson', async ({ page }) => {
   await page.goto('/lessons/001-welcome.html');
-  // 19 modules (Module 0 through Module 18) — built from the inlined nav data.
-  await expect(page.locator('#sidebar-nav .nav-module')).toHaveCount(19);
+  // 20 modules (Module 0 through Module 19) — built from the inlined nav data.
+  await expect(page.locator('#sidebar-nav .nav-module')).toHaveCount(20);
   // The current lesson is highlighted.
   const current = page.locator('#sidebar-nav .nav-link.is-current');
   await expect(current).toHaveCount(1);
@@ -42,11 +42,11 @@ test('reading a lesson marks it done and surfaces on the home page', async ({ pa
   // Scrolling the pager into view marks the lesson done.
   await page.locator('.pager').scrollIntoViewIfNeeded();
   await expect(page.locator('#sidebar-nav .nav-link.is-done')).toHaveCount(1, { timeout: 5000 });
-  await expect(page.locator('#course-progress')).toContainText(/1 of 107/);
+  await expect(page.locator('#course-progress')).toContainText(/1 of 114/);
 
   // The home page reflects the progress and offers a Resume link.
   await page.goto('/');
-  await expect(page.locator('#hero-progress')).toContainText(/1 of 107/);
+  await expect(page.locator('#hero-progress')).toContainText(/1 of 114/);
   await expect(page.locator('#resume-btn')).toBeVisible();
   await expect(page.locator('.toc-lessons a.is-done')).toHaveCount(1);
 });

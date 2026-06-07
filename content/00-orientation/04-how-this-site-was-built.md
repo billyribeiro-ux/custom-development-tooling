@@ -28,7 +28,7 @@ course.json + content/*.md  ->  generate-pages.mjs  ->  site/*.html
 
 ## Why a generator instead of writing HTML by hand?
 
-This course has 107 lessons. Imagine hand-writing 107 HTML files, each with the same header, the same progress bar, and **correct** Previous/Next links pointing at their neighbors. Now imagine you reorder two lessons. You'd have to fix the navigation on every affected page by hand, and you *will* make a mistake.
+This course has 114 lessons. Imagine hand-writing 114 HTML files, each with the same header, the same progress bar, and **correct** Previous/Next links pointing at their neighbors. Now imagine you reorder two lessons. You'd have to fix the navigation on every affected page by hand, and you *will* make a mistake.
 
 With a generator, the order lives in one place — `course.json` — and the script computes every Previous/Next link and progress number from it. Reorder a lesson, rebuild, done. **The navigation can never drift, because no human maintains it.**
 
