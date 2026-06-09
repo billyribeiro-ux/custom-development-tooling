@@ -13,7 +13,7 @@ It's a real course platform, not just a page sequence:
 - **Client-side search** (titles offline; full-text when served over http)
 - **Progress tracking** in `localStorage` — completion checkmarks, a "% complete" readout, and a Resume button
 - **On-this-page** outline with scrollspy, plus heading anchor links
-- **Light / dark theme toggle** (persisted), **Next / Previous** + arrow-key navigation, reading-time, SEO meta, and a 404 page
+- **Light / dark theme toggle** (persisted), **Next / Previous** + arrow-key navigation, reading-time, SEO meta + canonical/OG tags, a generated sitemap.xml, and a self-contained 404 page
 - Works offline from `file://`; search is progressively enhanced when served
 
 > **Dogfooding:** this site is built by the very kind of tooling it teaches. The generator
@@ -71,7 +71,7 @@ make help        # list every task
 
 ## Requirements
 
-- **Node.js 22+** (uses native `--experimental-sqlite`, `--env-file`, and TypeScript type-stripping)
+- **Node.js 22.13+** (uses the built-in `node:sqlite`, `--env-file`, and native TypeScript type-stripping; Node 24 LTS recommended)
 - **Python 3.11+** (for the parallel generator; uses only the standard library)
 - Optional: **Docker** (for the container lessons), **ShellCheck** / **ruff** (for linting)
 
@@ -80,8 +80,8 @@ make help        # list every task
 The worked examples are real and runnable:
 
 ```bash
-node --experimental-sqlite examples/node/migrate.mjs       # apply the SQL migration
-node --experimental-sqlite examples/node/seed-database.mjs  # seed known data (idempotent)
+node examples/node/migrate.mjs       # apply the SQL migration
+node examples/node/seed-database.mjs  # seed known data (idempotent)
 node examples/typescript/build-assets.ts --src assets --out /tmp/dist   # content-hash assets
 bash examples/shell/clean-cache.sh                          # dry-run cache cleaner
 ```

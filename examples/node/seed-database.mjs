@@ -4,8 +4,8 @@
 // This is the script narrated in Module 5, "seed-database.mjs Narrated".
 //
 // Run it (after migrate.mjs has created the tables):
-//   node --experimental-sqlite examples/node/migrate.mjs
-//   node --experimental-sqlite examples/node/seed-database.mjs
+//   node examples/node/migrate.mjs
+//   node examples/node/seed-database.mjs
 //
 // Why a seed script? Every developer and every test run needs the SAME known
 // starting data. Seeding by hand is slow and inconsistent; a script makes it

@@ -31,7 +31,8 @@ SHELL := bash
 
 .PHONY: help bootstrap dev install migrate seed build lint test clean   # all tasks (Module 11.3)
 
-NODE := node --experimental-sqlite              # reused variable (Module 11.3)
+DB ?= ./linkboard.db      # overridable variable (Module 11.3): make migrate DB=/tmp/test.db
+export DATABASE_PATH = $(DB)                     # flows into the scripts' env config (Module 9.4)
 
 help: ## Show this help                          # default target (Module 11.2/11.4)
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -41,10 +42,10 @@ install: ## Install dependencies
 	npm ci                                       # reproducible (Module 8.4)
 
 migrate: ## Apply database migrations
-	$(NODE) scripts/migrate.mjs
+	node scripts/migrate.mjs
 
 seed: ## Load known data into the database
-	$(NODE) scripts/seed.mjs
+	node scripts/seed.mjs
 
 build: ## Build assets and pages
 	node scripts/build-assets.ts                 # TS, runs directly (Module 7.2)
@@ -75,7 +76,7 @@ This Makefile is the *composition layer* (Module 17.1) — it wires the pieces f
 - **`SHELL := bash` + `.SHELLFLAGS`** — the safety preamble applied to every recipe (Module 11.5), so a failing command in any task aborts it.
 - **`.PHONY`** lists every task (Module 11.3) — they're commands, not files, so they always run (even though `clean` deletes a `site/` *folder*).
 - **`help`** is self-documenting (Module 11.4): it greps the Makefile for `## ` comments and is the default target, so bare `make` prints the menu.
-- **`NODE := node --experimental-sqlite`** — a variable (Module 11.3) so the sqlite flag isn't repeated in every database target.
+- **`DB ?= ./linkboard.db` + `export DATABASE_PATH = $(DB)`** — a Make variable (Module 11.3) exported into every recipe's environment, where the scripts read it as config (Module 9.4). One overridable knob (`make migrate DB=/tmp/test.db`) flows through the whole chain: Make variable → environment → script.
 - **Prerequisites compose tasks** (Module 11.2): `bootstrap: install migrate seed build` runs four tasks in order; `dev: build` and `test: build` guarantee a fresh build first. This is task composition (Module 17.1) — small tasks chained into workflows.
 - **`lint`** spans three languages (Module 11.5) — ShellCheck (Module 3.8), ruff (Module 10.3), `tsc --noEmit` (Module 7.3) — gracefully skipping missing tools.
 - **Language-independence** (Module 11.1): `build` runs a `.ts` *and* a `.py`; `migrate`/`seed` run `.mjs`; `lint` covers all three. The user just types `make build` — the Makefile hides which language each task uses (Module 6.5).

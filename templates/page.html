@@ -5,13 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="{{description}}" />
   <meta name="theme-color" content="#0d1117" />
+  <link rel="canonical" href="{{canonical}}" />
+  <meta property="og:type" content="article" />
+  <meta property="og:site_name" content="{{courseTitle}}" />
+  <meta property="og:title" content="{{title}}" />
+  <meta property="og:description" content="{{description}}" />
+  <meta property="og:url" content="{{canonical}}" />
   <title>{{title}} · {{courseTitle}}</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230d1117'/%3E%3Ctext x='50' y='72' font-size='58' text-anchor='middle' fill='%237ee787' font-family='monospace' font-weight='bold'%3E%26gt;_%3C/text%3E%3C/svg%3E" />
   <!-- Set the theme before paint to avoid a flash of the wrong theme. -->
   <script>try{var t=localStorage.getItem('cdt-theme');if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
   <link rel="stylesheet" href="{{assets}}/styles.css" />
-  <!-- Monaco editor loader (VS Code's engine), from CDN. app.js lazy-mounts editors. -->
-  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.js"></script>
+  <!-- Monaco editor loader (VS Code's engine), from CDN. Deferred: app.js only
+       needs `require` at lazy-mount time, so don't block first paint on it. -->
+  <script defer src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.js"></script>
   <script defer src="{{assets}}/app.js"></script>
 </head>
 <body data-out="{{outName}}" data-index="{{globalIndex}}" data-total="{{total}}" data-nav="{{navData}}">

@@ -114,8 +114,8 @@ try {
 The two commands work in sequence — structure first, then data:
 
 ```bash title=setup-database.sh
-node --experimental-sqlite examples/node/migrate.mjs        # 1. create the schema
-node --experimental-sqlite examples/node/seed-database.mjs  # 2. fill it with data
+node examples/node/migrate.mjs        # 1. create the schema
+node examples/node/seed-database.mjs  # 2. fill it with data
 ```
 
 This pair — `make migrate && make seed`, often combined into `make db-setup` (Module 11) — is how a developer goes from "fresh clone" to "working database" in one step. It's a cornerstone of the capstone's `bootstrap` (Module 18).

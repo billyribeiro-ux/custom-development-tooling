@@ -3,6 +3,7 @@
   "subtitle": "Build the scripts and config that run real software — and learn to build whatever you want",
   "edition": "2026 Edition",
   "repoUrl": "https://github.com/billyribeiro-ux/custom-development-tooling",
+  "siteUrl": "https://billyribeiro-ux.github.io/custom-development-tooling/",
   "modules": [
     {
       "id": "00-orientation",

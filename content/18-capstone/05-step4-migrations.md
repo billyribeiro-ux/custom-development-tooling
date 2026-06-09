@@ -109,8 +109,8 @@ It uses fixed data (deterministic, Module 13.6), `ON CONFLICT DO NOTHING` agains
 ## Run the sequence
 
 ```bash title=db-setup.sh
-node --experimental-sqlite scripts/migrate.mjs    # create the schema
-node --experimental-sqlite scripts/seed.mjs       # load known links
+node scripts/migrate.mjs    # create the schema
+node scripts/seed.mjs       # load known links
 ```
 
 Migrate then seed (Module 13.6) — the same sequence the bootstrap (Step 2) runs and the Makefile (Step 6) will wrap as `make migrate` + `make seed`. A fresh clone goes from empty to a populated database with these two commands.

@@ -26,6 +26,9 @@ python3 --version   # e.g. Python 3.12.3
 
 If a command prints a version, it's installed and on your `PATH` (we explain `PATH` in Module 2). If instead you see `command not found`, it's not installed — install it and try again.
 
+> [!NOTE]
+> As of mid-2026, **Node 24 is the active LTS** ("Long-Term Support" — the line recommended for most users) and Node 22 is in maintenance. Everything in this course runs on **22.13+ or 24** — we say "Node 22+" throughout because that's the floor, but if you're installing fresh today, pick Node 24.
+
 > [!GOTCHA]
 > On some systems `python` means Python 2 (ancient) or doesn't exist, while `python3` means Python 3. Throughout this course we always write `python3` to be unambiguous. Same idea for `pip3`.
 

@@ -35,6 +35,7 @@ Here's the repo's actual `tsconfig.json`, the meaning of each line:
 
     // --- We run .ts directly, so only CHECK, don't emit ---
     "noEmit": true,                // produce no .js — tsc is a pure type-checker here
+    "erasableSyntaxOnly": true,    // forbid TS syntax that emits runtime code (Module 7.2)
     "verbatimModuleSyntax": true,  // keep import/export exactly as written (no surprises)
     "isolatedModules": true,       // each file must be compilable alone (req. for stripping)
     "skipLibCheck": true,          // don't deep-check dependency .d.ts files (faster)

@@ -242,6 +242,7 @@ def main() -> None:
             })
     total = len(flat)
     repo_url = course.get("repoUrl", "")
+    site_url = course.get("siteUrl", "")   # public base URL (for canonical/og/sitemap)
 
     # Lightweight nav data inlined into every page (works offline).
     nav = {
@@ -295,6 +296,7 @@ def main() -> None:
         page = fill(page_tpl, {
             "title": f'Lesson {lesson["globalIndex"]} — {lesson["title"]}',
             "description": description,
+            "canonical": f'{site_url}lessons/{lesson["outName"]}' if site_url else "",
             "courseTitle": "Custom Development Tooling",
             "lessonTitle": title,
             "moduleTitle": mod_title,
@@ -338,6 +340,7 @@ def main() -> None:
     index = fill(index_tpl, {
         "title": course["title"],
         "description": html.escape(course.get("subtitle", course["title"])),
+        "canonical": site_url or "",
         "courseTitle": html.escape(course["title"]),
         "subtitle": html.escape(course.get("subtitle", "")),
         "edition": html.escape(course.get("edition", "")),
@@ -353,21 +356,57 @@ def main() -> None:
     search_doc = {"title": course["title"], "total": total, "lessons": search_entries}
     (out_dir / "search-index.json").write_text(json.dumps(search_doc, ensure_ascii=False))
 
-    # A friendly 404 page.
-    not_found = fill(page_tpl, {
-        "title": "Page not found", "description": "Page not found",
-        "courseTitle": "Custom Development Tooling", "lessonTitle": "404", "moduleTitle": "",
-        "breadcrumb": '<a href="./index.html">Home</a>', "progressText": "",
-        "progressPercent": 0, "readingTime": 0, "outName": "", "globalIndex": 0,
-        "total": total, "navData": nav_json,
-        "body": '<h1>404 — Page not found</h1><p>That lesson doesn\'t exist. '
-                '<a href="./index.html">Go to the course home</a>.</p>',
-        "prevAttrs": 'aria-disabled="true" tabindex="-1"', "prevLabel": "",
-        "nextAttrs": 'href="./index.html"', "nextLabel": "Course home",
-        "exampleFooter": "", "assets": "assets", "home": "index.html",
-    })
+    # sitemap.xml + robots.txt (when a public siteUrl is configured). No <lastmod>:
+    # injecting "now" would make the build non-deterministic (Module 19.1).
+    if site_url:
+        urls = [site_url] + [f'{site_url}lessons/{x["outName"]}' for x in flat]
+        locs = "\n".join(f"  <url><loc>{html.escape(u)}</loc></url>" for u in urls)
+        sitemap = (
+            '<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+            f"{locs}\n</urlset>\n"
+        )
+        (out_dir / "sitemap.xml").write_text(sitemap)
+        (out_dir / "robots.txt").write_text(
+            f"User-agent: *\nAllow: /\n\nSitemap: {site_url}sitemap.xml\n"
+        )
+
+    # A friendly 404 page. Self-contained (inline styles, no relative assets):
+    # GitHub Pages serves 404.html's content AT the missing URL, so relative
+    # links would resolve under /lessons/… and break. Home link computed client-side.
+    not_found = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>404 — Page not found · Custom Development Tooling</title>
+  <style>
+    body {{ margin:0; min-height:100vh; display:grid; place-items:center;
+      background:#0d1117; color:#e6edf3;
+      font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }}
+    main {{ text-align:center; padding:2rem; }}
+    h1 {{ font-size:2.4rem; margin:0 0 .5rem; }}
+    p {{ color:#9aa7b4; }}
+    a {{ color:#7ee787; font-weight:600; }}
+  </style>
+</head>
+<body>
+  <main>
+    <h1>404 — Page not found</h1>
+    <p>That lesson doesn't exist (or moved).</p>
+    <p><a id="home-link" href="{site_url or '/'}">Go to the course home &rarr;</a></p>
+  </main>
+  <script>
+    // Best-effort: from /…/lessons/<missing>, point home at the directory above lessons/.
+    var m = location.pathname.match(/^(.*\\/)lessons\\//);
+    if (m) document.getElementById('home-link').href = m[1];
+  </script>
+</body>
+</html>
+"""
     (out_dir / "404.html").write_text(not_found)
-    print(f"Done: {total} lessons + index + search + 404 -> {args.out}/index.html")
+    print(f"Done: {total} lessons + index + search + sitemap + 404 -> {args.out}/index.html")
 
 
 if __name__ == "__main__":

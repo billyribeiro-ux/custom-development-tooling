@@ -22,7 +22,7 @@
 
 import { parseArgs } from 'node:util';
 import { readFile, writeFile, mkdir, rm, cp, access } from 'node:fs/promises';
-import { join, dirname } from 'node:path';
+import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { marked } from 'marked';
 import {
@@ -63,7 +63,11 @@ Options:
   process.exit(0);
 }
 
-const OUT_DIR = join(ROOT, flags.out);
+// resolve(), not join(): join(ROOT, '/abs/path') would nest the absolute path
+// INSIDE the repo, silently writing to the wrong place. resolve() treats an
+// absolute --out as absolute and a relative one as relative to the repo root —
+// matching what the Python generator's pathlib does (parity matters).
+const OUT_DIR = resolve(ROOT, flags.out);
 
 /** Does a file exist? (access throws if not — we turn that into a boolean.) */
 async function exists(path) {
@@ -102,18 +106,22 @@ const CALLOUTS = {
   KEY: { label: 'Key takeaways', cls: 'key' },
 };
 
+// marked v13+ renderer API: each method receives a single TOKEN object (not the
+// old positional strings), and nested content is rendered via this.parser —
+// so these must be regular methods (this-bound), never arrow functions.
 const renderer = {
-  code(code, infostring = '') {
+  code({ text, lang }) {
+    const infostring = lang || '';            // token.lang carries the full ```info string
     const parts = infostring.trim().split(/\s+/);
     const langKey = (parts[0] || 'text').toLowerCase();
-    const lang = MONACO_LANG[langKey] || 'plaintext';
+    const monacoLang = MONACO_LANG[langKey] || 'plaintext';
     const titleMatch = infostring.match(/title=([^\s]+)/);
     const filename = titleMatch ? titleMatch[1] : '';
-    const escaped = escapeHtml(code);
+    const escaped = escapeHtml(text);
     const filePill = filename
       ? `<span class="code-file">${escapeHtml(filename)}</span>`
       : '';
-    return `<figure class="monaco-block" data-lang="${lang}" data-filename="${escapeHtml(filename)}">
+    return `<figure class="monaco-block" data-lang="${monacoLang}" data-filename="${escapeHtml(filename)}">
   <figcaption class="code-caption">
     <span class="code-lang">${escapeHtml(langKey)}</span>${filePill}
     <span class="code-actions">
@@ -127,7 +135,8 @@ const renderer = {
 </figure>\n`;
   },
 
-  blockquote(quoteHtml) {
+  blockquote({ tokens }) {
+    const quoteHtml = this.parser.parse(tokens);   // render the quote's inner tokens
     const marker = quoteHtml.match(/^\s*<p>\[!(\w+)\]\s*\n?/);
     if (marker) {
       const type = marker[1].toUpperCase();
@@ -143,9 +152,10 @@ const renderer = {
     return `<blockquote>${quoteHtml}</blockquote>\n`;
   },
 
-  heading(text, level) {
+  heading({ tokens, depth }) {
+    const text = this.parser.parseInline(tokens);  // render inline markup inside the heading
     const id = slugify(text);
-    return `<h${level} id="${id}">${text}</h${level}>\n`;
+    return `<h${depth} id="${id}">${text}</h${depth}>\n`;
   },
 };
 
@@ -154,7 +164,7 @@ marked.use({ gfm: true, breaks: false, renderer });
 // ---------------------------------------------------------------------------
 // 3. Render a single lesson page. Returns its search-index entry.
 // ---------------------------------------------------------------------------
-async function renderLesson(lesson, total, pageTemplate, repoUrl, navJson) {
+async function renderLesson(lesson, total, pageTemplate, repoUrl, navJson, siteUrl) {
   let markdownSource;
   if (await exists(join(ROOT, lesson.contentRelPath))) {
     markdownSource = await readFile(join(ROOT, lesson.contentRelPath), 'utf8');
@@ -186,6 +196,7 @@ async function renderLesson(lesson, total, pageTemplate, repoUrl, navJson) {
   const html = fill(pageTemplate, {
     title: `Lesson ${lesson.globalIndex} — ${lesson.title}`,
     description: escapeHtml(description),
+    canonical: siteUrl ? `${siteUrl}lessons/${lesson.outName}` : '',
     courseTitle: 'Custom Development Tooling',
     lessonTitle: escapeHtml(lesson.title),
     moduleTitle: escapeHtml(lesson.moduleTitle),
@@ -223,7 +234,7 @@ async function renderLesson(lesson, total, pageTemplate, repoUrl, navJson) {
 // ---------------------------------------------------------------------------
 // 4. Render the index.html table of contents.
 // ---------------------------------------------------------------------------
-async function renderIndex(course, flat, total, indexTemplate, navJson) {
+async function renderIndex(course, flat, total, indexTemplate, navJson, siteUrl) {
   let toc = '';
   course.modules.forEach((mod, mi) => {
     const lessons = flat.filter((l) => l.moduleId === mod.id);
@@ -247,6 +258,7 @@ ${items}
   const html = fill(indexTemplate, {
     title: course.title,
     description: escapeHtml(course.subtitle || course.title),
+    canonical: siteUrl || '',
     courseTitle: escapeHtml(course.title),
     subtitle: escapeHtml(course.subtitle || ''),
     edition: escapeHtml(course.edition || ''),
@@ -271,6 +283,7 @@ async function main() {
   const flat = flatten(course);
   const total = flat.length;
   const repoUrl = course.repoUrl ?? '';
+  const siteUrl = course.siteUrl ?? '';   // public base URL (for canonical/og/sitemap)
   const navJson = escapeHtml(JSON.stringify(navData(course, flat)));
 
   const pageTemplate = await readFile(join(ROOT, 'templates', 'page.html'), 'utf8');
@@ -282,9 +295,9 @@ async function main() {
 
   const searchEntries = [];
   for (const lesson of flat) {
-    searchEntries.push(await renderLesson(lesson, total, pageTemplate, repoUrl, navJson));
+    searchEntries.push(await renderLesson(lesson, total, pageTemplate, repoUrl, navJson, siteUrl));
   }
-  await renderIndex(course, flat, total, indexTemplate, navJson);
+  await renderIndex(course, flat, total, indexTemplate, navJson, siteUrl);
 
   // Search index (full-text search, progressively enhanced over http).
   await writeFile(
@@ -293,34 +306,62 @@ async function main() {
     'utf8',
   );
 
-  // A friendly 404 page.
-  const notFound = fill(pageTemplate, {
-    title: 'Page not found',
-    description: 'Page not found',
-    courseTitle: 'Custom Development Tooling',
-    lessonTitle: '404',
-    moduleTitle: '',
-    breadcrumb: `<a href="./index.html">Home</a>`,
-    progressText: '',
-    progressPercent: 0,
-    readingTime: 0,
-    outName: '',
-    globalIndex: 0,
-    total,
-    navData: navJson,
-    body: `<h1>404 — Page not found</h1><p>That lesson doesn't exist. <a href="./index.html">Go to the course home</a>.</p>`,
-    prevAttrs: `aria-disabled="true" tabindex="-1"`,
-    prevLabel: '',
-    nextAttrs: `href="./index.html"`,
-    nextLabel: 'Course home',
-    exampleFooter: '',
-    assets: 'assets',
-    home: 'index.html',
-  });
+  // sitemap.xml + robots.txt (when a public siteUrl is configured). No <lastmod>:
+  // injecting "now" would make the build non-deterministic (Module 19.1).
+  if (siteUrl) {
+    const urls = [siteUrl, ...flat.map((l) => `${siteUrl}lessons/${l.outName}`)];
+    const sitemap =
+      `<?xml version="1.0" encoding="UTF-8"?>\n` +
+      `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
+      urls.map((u) => `  <url><loc>${escapeHtml(u)}</loc></url>`).join('\n') +
+      `\n</urlset>\n`;
+    await writeFile(join(OUT_DIR, 'sitemap.xml'), sitemap, 'utf8');
+    await writeFile(
+      join(OUT_DIR, 'robots.txt'),
+      `User-agent: *\nAllow: /\n\nSitemap: ${siteUrl}sitemap.xml\n`,
+      'utf8',
+    );
+  }
+
+  // A friendly 404 page. It must be SELF-CONTAINED (inline styles, no relative
+  // asset links): GitHub Pages serves 404.html's content AT the missing URL, so
+  // a relative "assets/styles.css" would resolve under /lessons/… and break.
+  // The home link is computed client-side for the same reason.
+  const notFound = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>404 — Page not found · Custom Development Tooling</title>
+  <style>
+    body { margin:0; min-height:100vh; display:grid; place-items:center;
+      background:#0d1117; color:#e6edf3;
+      font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+    main { text-align:center; padding:2rem; }
+    h1 { font-size:2.4rem; margin:0 0 .5rem; }
+    p { color:#9aa7b4; }
+    a { color:#7ee787; font-weight:600; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>404 — Page not found</h1>
+    <p>That lesson doesn't exist (or moved).</p>
+    <p><a id="home-link" href="${siteUrl || '/'}">Go to the course home &rarr;</a></p>
+  </main>
+  <script>
+    // Best-effort: from /…/lessons/<missing>, point home at the directory above lessons/.
+    var m = location.pathname.match(/^(.*\\/)lessons\\//);
+    if (m) document.getElementById('home-link').href = m[1];
+  </script>
+</body>
+</html>
+`;
   await writeFile(join(OUT_DIR, '404.html'), notFound, 'utf8');
 
   const ms = Math.round(performance.now() - t0);
-  console.log(`Done: ${total} lessons + index + search + 404 in ${ms} ms -> ${flags.out}/index.html`);
+  console.log(`Done: ${total} lessons + index + search + sitemap + 404 in ${ms} ms -> ${flags.out}/index.html`);
 }
 
 // Run only when executed directly (the ESM equivalent of Python's __main__,

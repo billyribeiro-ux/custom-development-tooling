@@ -24,16 +24,16 @@ The control center for the Node side (Module 8.2). Define identity, the module s
   "type": "module",
   "engines": { "node": ">=22" },
   "scripts": {
-    "migrate": "node --experimental-sqlite scripts/migrate.mjs",
-    "seed": "node --experimental-sqlite scripts/seed.mjs",
+    "migrate": "node scripts/migrate.mjs",
+    "seed": "node scripts/seed.mjs",
     "build:assets": "node scripts/build-assets.ts",
     "build:pages": "python3 tools/generate-pages.py",
     "test:e2e": "playwright test"
   },
   "devDependencies": {
     "@playwright/test": "1.60.0",
-    "@types/node": "22.10.5",
-    "typescript": "5.7.3"
+    "@types/node": "25.9.2",
+    "typescript": "6.0.3"
   }
 }
 ```
@@ -43,7 +43,7 @@ The choices, each grounded in a module:
 - **`"version": "0.1.0"`** — start pre-1.0 (Module 17.4 — "unstable, may change" while you're building).
 - **`"private": true`** — never accidentally publish (Module 8.2).
 - **`"type": "module"`** — modern ESM (Module 5.1).
-- **`"engines": { "node": ">=22" }`** — declare the Node requirement (Module 8.2), since we use `--experimental-sqlite` and native TS.
+- **`"engines": { "node": ">=22" }`** — declare the Node requirement (Module 8.2), since we rely on the built-in `node:sqlite` and native TypeScript type-stripping.
 - **`scripts`** — named entry points (Module 8.2). These are the *verbs* the Makefile (Step 6) will wrap.
 - **`devDependencies`** — Playwright, TypeScript, types — all *dev* tools, not runtime (Module 8.2). Linkboard's tooling needs no *runtime* npm dependencies (it uses Node built-ins), so there's no `dependencies` block — deliberately minimal (Module 5.2).
 

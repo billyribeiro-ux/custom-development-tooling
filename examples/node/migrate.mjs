@@ -5,8 +5,8 @@
 // once, in filename order, and records what it applied in a tracking table.
 //
 // Run it:
-//   node --experimental-sqlite examples/node/migrate.mjs
-//   node --experimental-sqlite examples/node/migrate.mjs --db /tmp/app.db
+//   node examples/node/migrate.mjs
+//   node examples/node/migrate.mjs --db /tmp/app.db
 //
 // node:sqlite is a built-in (Node 22.5+). No npm install, no driver. In 2026
 // this is the simplest way to get a real SQL database for tooling and tests.

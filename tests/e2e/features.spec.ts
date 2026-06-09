@@ -63,3 +63,15 @@ test('the generated 404 page renders for unknown URLs', async ({ page }) => {
   expect(res?.status()).toBe(404);
   await expect(page.locator('h1')).toContainText('404');
 });
+
+test('the build emits a sitemap and robots.txt', async ({ request }) => {
+  const sitemap = await request.get('/sitemap.xml');
+  expect(sitemap.status()).toBe(200);
+  const xml = await sitemap.text();
+  expect(xml).toContain('<urlset');
+  expect(xml).toContain('lessons/001-welcome.html');
+
+  const robots = await request.get('/robots.txt');
+  expect(robots.status()).toBe(200);
+  expect(await robots.text()).toContain('Sitemap:');
+});

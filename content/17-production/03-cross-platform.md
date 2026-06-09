@@ -22,7 +22,7 @@ const file = join(dir, name);          // '/' on Unix, '\' on Windows — automa
 ```
 
 > [!GOTCHA]
-> Windows uses `\` as the path separator, not `/`. Hard-coding `'/'` (or splitting paths on `'/'`) breaks on Windows. **Always use `path.join`/`pathlib.Path`** (Modules 5.2, 6.2), never string concatenation. The good news: Windows *also* accepts `/` in many contexts, so this often "works" until it doesn't — making it a sneaky, intermittent bug. Use the path module and it's a non-issue.
+> **Always use `path.join`/`pathlib.Path`** (Modules 5.2, 6.2), never string concatenation — and beware that Windows *also* accepts `/` in many contexts, so hard-coded separators often "work" until they suddenly don't: a sneaky, intermittent bug. The underlying difference: Windows uses `\` as the path separator, not `/`, so hard-coding `'/'` (or splitting paths on `'/'`) breaks there. Use the path module and it's a non-issue.
 
 ## Pitfall 2: line endings (CRLF vs LF)
 

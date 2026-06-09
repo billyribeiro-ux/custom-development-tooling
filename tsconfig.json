@@ -19,6 +19,10 @@
     // We run .ts directly (type-stripping / tsx) and never emit .js for
     // scripts, so we only type-check. "noEmit" makes `tsc` a pure linter.
     "noEmit": true,
+    // Forbid TS syntax that emits runtime code (enum, namespace, parameter
+    // properties) — guaranteeing every file stays runnable via Node's native
+    // type stripping (TS 5.8+; see Module 7.2).
+    "erasableSyntaxOnly": true,
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "skipLibCheck": true,

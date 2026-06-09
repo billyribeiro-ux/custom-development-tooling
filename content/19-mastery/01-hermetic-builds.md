@@ -14,7 +14,7 @@ Most builds violate all three without anyone noticing, until the day they cause 
 
 ## Why Make is "incorrect" (and that's a famous result)
 
-Module 11 taught Make's timestamp model: rebuild a target if it's *older* than its prerequisites. This is convenient and it's also **provably incorrect** as a model of correctness. The classic critique is Mike Bostock/Peter Miller's *"Recursive Make Considered Harmful"* and the broader observation that **mtimes are a lie**:
+Module 11 taught Make's timestamp model: rebuild a target if it's *older* than its prerequisites. This is convenient and it's also **provably incorrect** as a model of correctness. The classic critique is Peter Miller's *"Recursive Make Considered Harmful"* and the broader observation that **mtimes are a lie**:
 
 ```text title=why-mtimes-lie
 - git checkout changes file CONTENTS but timestamps jump around → stale or needless rebuilds

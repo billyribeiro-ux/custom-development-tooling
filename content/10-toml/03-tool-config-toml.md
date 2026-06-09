@@ -39,6 +39,9 @@ ruff format .            # format code (the "black" replacement)
 > [!TIP]
 > Notice the *pattern* repeating across every language: a **linter** for correctness + a **formatter** for style, configured declaratively and run in CI. Shell has ShellCheck + shfmt (Module 3.8); TypeScript has tsc + ESLint/Prettier (Module 7); Python has ruff (which does both). The names change; the discipline — *let machines check the mechanical stuff* — is identical. Recognizing this pattern means you can set up quality tooling in any language.
 
+> [!NOTE]
+> ruff also started a trend: **rewriting dev tools in fast compiled languages**. The JavaScript world now has its own ruff-alikes — **Biome** (an all-in-one linter+formatter replacing ESLint+Prettier for many teams) and **Oxlint** (an extremely fast Rust linter) — and Python's `uv` (Module 6.3) is the same story for package management. The 10-100× speedups aren't vanity: they move linting from "a CI step you wait on" into "feedback on every keystroke" (Module 1.2). Expect this pattern — same job, dramatically faster tool — to keep repeating.
+
 ## Why config-in-pyproject.toml is better
 
 Before `[tool.*]`, each tool had its own file: `.flake8`, `.isort.cfg`, `pyproject.toml` for black, `mypy.ini`... A new contributor had to find and understand all of them. Now:

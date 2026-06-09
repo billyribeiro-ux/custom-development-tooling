@@ -70,7 +70,7 @@ services:
         condition: service_healthy
 
   db:
-    image: postgres:16-alpine
+    image: postgres:17-alpine
     environment:
       POSTGRES_USER: dev
       POSTGRES_PASSWORD: dev
@@ -92,7 +92,7 @@ volumes:
 Reading it through Module 14.4:
 
 - **`site` service** — *builds* from the course Dockerfile (note `context: ../..` so the build sees the whole repo, and the explicit `dockerfile:` path). Maps port 8080. Waits for the database via `depends_on: condition: service_healthy`.
-- **`db` service** — *uses* the prebuilt `postgres:16-alpine` image (Module 14.1). Sets local-only credentials via `environment` (a comment in the file warns never to do this in production, Module 9.3). Maps 5432.
+- **`db` service** — *uses* the prebuilt `postgres:17-alpine` image (Module 14.1). Sets local-only credentials via `environment` (a comment in the file warns never to do this in production, Module 9.3). Maps 5432.
 - **The health check** — runs `pg_isready` until Postgres truly accepts connections (Module 14.4's gotcha), so `site` only starts once the DB is *ready*, not merely *started*.
 - **The named volume** `db-data` — persists the database across `down`/`up` (Module 14.4).
 

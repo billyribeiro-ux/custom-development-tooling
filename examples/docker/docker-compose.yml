@@ -24,7 +24,7 @@ services:
 
   # A real Postgres database for the .sql / migrations lessons.
   db:
-    image: postgres:16-alpine # pinned major version, tiny Alpine base
+    image: postgres:17-alpine # pinned major version, tiny Alpine base
     environment:
       POSTGRES_USER: dev
       POSTGRES_PASSWORD: dev # local-only credentials; never do this in prod

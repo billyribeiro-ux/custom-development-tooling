@@ -13,8 +13,8 @@ WORKDIR /app
 COPY package.json package-lock.json ./             # manifests first (caching — Module 14.3)
 RUN npm ci                                          # reproducible install (Module 8.4)
 COPY . .                                            # then the source
-RUN node --experimental-sqlite scripts/migrate.mjs \
- && node --experimental-sqlite scripts/seed.mjs \
+RUN node scripts/migrate.mjs \
+ && node scripts/seed.mjs \
  && node scripts/build-assets.ts \
  && python3 tools/generate-pages.py                 # build the site (Steps 3-4)
 
@@ -69,7 +69,7 @@ services:
         condition: service_healthy                 # wait for READY, not just started (Module 14.4)
 
   db:
-    image: postgres:16-alpine                       # prebuilt image (Module 14.1)
+    image: postgres:17-alpine                       # prebuilt image (Module 14.1)
     environment:
       POSTGRES_USER: dev
       POSTGRES_PASSWORD: dev                        # local-only creds (Module 9.3)
@@ -89,7 +89,7 @@ volumes:
 Everything from Module 14.4:
 
 - **`app`** service builds from the Dockerfile, maps port 8080, and waits for the database via `depends_on: condition: service_healthy`.
-- **`db`** uses the prebuilt `postgres:16-alpine` image (Module 14.1), with local-only credentials (Module 9.3).
+- **`db`** uses the prebuilt `postgres:17-alpine` image (Module 14.1), with local-only credentials (Module 9.3).
 - The app connects to the database by its **service name** `db` (not `localhost`, Module 14.4's gotcha).
 - A **health check** (`pg_isready`) ensures the app starts only when the DB is *ready* (Module 14.4), not merely started.
 - A **named volume** persists the database across restarts (Module 14.4).

@@ -14,7 +14,7 @@ Turn a manifest (`course.json`) plus a folder of Markdown into linked HTML pages
 ```javascript title=generate-pages.mjs
 import { parseArgs } from 'node:util';
 import { readFile, writeFile, mkdir, rm, cp, access } from 'node:fs/promises';
-import { join, dirname } from 'node:path';
+import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { marked } from 'marked';
 import { escapeHtml, fill, slugify, stripToText, readingTime, summarize, flatten, navData } from './lib.mjs';
@@ -78,28 +78,32 @@ The existence check from Module 5.3, exactly.
 ## The custom Markdown renderer
 
 ```javascript title=generate-pages.mjs
+// marked v13+ renderer API: each method receives a TOKEN object, and nested
+// content renders via this.parser — so these are regular methods, never arrows.
 const renderer = {
-  code(code, infostring = '') {
-    // parse the language and optional "title=..." from the fence info string
+  code({ text, lang }) {
+    // token.lang carries the full ```info string ("js title=x.js");
     // emit a <figure class="monaco-block"> with the code in a hidden <textarea>
   },
-  blockquote(quoteHtml) {
+  blockquote({ tokens }) {
+    const quoteHtml = this.parser.parse(tokens);   // render the quote's inner tokens
     // if it starts with [!NOTE]/[!TIP]/etc., turn it into a styled callout <aside>
   },
-  heading(text, level) {
+  heading({ tokens, depth }) {
+    const text = this.parser.parseInline(tokens);  // render inline markup in the heading
     // add an id slug so sections are deep-linkable
   },
 };
 marked.use({ gfm: true, breaks: false, renderer });
 ```
 
-This is where the course's special syntax comes from. We override three of `marked`'s renderers:
+This is where the course's special syntax comes from. We override three of `marked`'s renderers (using its modern **token-based API** — each renderer receives a structured token, and `this.parser` renders any nested tokens):
 
-- **`code`** turns every fenced code block into the `<figure class="monaco-block">` that `app.js` later upgrades into a Monaco editor (the copy/edit boxes you've been using). It parses the `title=filename` from the fence info string.
-- **`blockquote`** detects the `[!NOTE]`/`[!DOGFOOD]`/etc. markers and renders styled callout boxes — like the very box you're reading.
-- **`heading`** adds an `id` slug for deep links.
+- **`code`** turns every fenced code block into the `<figure class="monaco-block">` that `app.js` later upgrades into a Monaco editor (the copy/edit boxes you've been using). It parses the `title=filename` from the fence info string (`token.lang`).
+- **`blockquote`** renders the quote's inner tokens, then detects the `[!NOTE]`/`[!DOGFOOD]`/etc. markers and emits styled callout boxes — like the very box you're reading.
+- **`heading`** renders the heading's inline tokens and adds an `id` slug for deep links.
 
-This is the "config over code" idea (Module 4.3): `marked` does the heavy lifting of parsing Markdown; we just *configure* how a few token types render. We didn't write a Markdown parser — we extended one.
+This is the "config over code" idea (Module 4.3): `marked` does the heavy lifting of parsing Markdown; we just *configure* how a few token types render. We didn't write a Markdown parser — we extended one. (A version-upgrade war story lives here too: marked v12 silently expanded tabs to spaces inside code blocks — which would have made the Copy button hand you *space-indented Makefile recipes*, the exact bug Module 11.3 warns about. The current version preserves tabs. Pin your dependencies, and diff your output when you upgrade them — Module 19.1.)
 
 ## Building the lesson graph (the heart of navigation)
 
@@ -128,19 +132,20 @@ This is *why the navigation can never drift* (Module 0.4). We flatten all module
 ## Rendering one lesson
 
 ```javascript title=generate-pages.mjs
-async function renderLesson(lesson, total, pageTemplate) {
+async function renderLesson(lesson, total, pageTemplate, repoUrl, navJson, siteUrl) {
   let markdownSource;
-  if (await exists(lesson.contentPath)) {
-    markdownSource = await readFile(lesson.contentPath, 'utf8');
+  if (await exists(join(ROOT, lesson.contentRelPath))) {
+    markdownSource = await readFile(join(ROOT, lesson.contentRelPath), 'utf8');
   } else {
     markdownSource = `# ${lesson.title}\n\n> [!NOTE]\n> This lesson is coming soon.`;
-    console.warn(`  (!) missing content: ${lesson.contentPath}`);
+    console.warn(`  (!) missing content: ${lesson.contentRelPath}`);
   }
   const body = marked.parse(markdownSource);
   const progressPercent = Math.round((lesson.globalIndex / total) * 100);
-  // ...compute breadcrumb, prev/next attrs...
+  // ...compute breadcrumb, prev/next attrs, reading time, canonical URL...
   const html = fill(pageTemplate, { title, body, progressText, prevAttrs, nextAttrs, /* ... */ });
   await writeFile(join(OUT_DIR, 'lessons', lesson.outName), html, 'utf8');
+  return { /* this lesson's search-index entry */ };
 }
 ```
 
@@ -162,7 +167,8 @@ async function main() {
   for (const lesson of flat) searchEntries.push(await renderLesson(lesson, flat.length, pageTemplate, ...));
   await renderIndex(course, flat, flat.length, indexTemplate, navJson);
   await writeFile('search-index.json', JSON.stringify({ lessons: searchEntries }));  // for search
-  await writeFile('404.html', /* rendered 404 */);                                    // friendly 404
+  await writeFile('sitemap.xml', /* one <url> per page */);   // SEO (plus robots.txt)
+  await writeFile('404.html', /* self-contained 404 page */);  // friendly, works at any path
 }
 
 // Run only when executed directly — the ESM equivalent of Python's __main__
@@ -175,7 +181,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 }
 ```
 
-`main` reads the manifest and template, **cleans the output directory** (so every build starts fresh — deterministic, no stale files; Module 1.4), copies the static assets, renders every lesson and the index, and finally writes a **`search-index.json`** (powering the sidebar search in `app.js`) and a friendly **`404.html`**. It uses the `main().catch()` pattern from Module 5.5: any failure prints an error and exits non-zero, so CI refuses to deploy a broken build. Note the entry point is *guarded* by `import.meta.url === ...` — the ESM equivalent of Python's `__main__` (Module 6.1) — so importing the file from a unit test doesn't kick off a build.
+`main` reads the manifest and template, **cleans the output directory** (so every build starts fresh — deterministic, no stale files; Module 1.4), copies the static assets, renders every lesson and the index, and finally writes a **`search-index.json`** (powering the sidebar search in `app.js`), a **`sitemap.xml`** + `robots.txt` (deliberately with no `<lastmod>` — injecting "now" would make the build non-deterministic, Module 19.1), and a self-contained **`404.html`**. It uses the `main().catch()` pattern from Module 5.5: any failure prints an error and exits non-zero, so CI refuses to deploy a broken build. Note the entry point is *guarded* by `import.meta.url === ...` — the ESM equivalent of Python's `__main__` (Module 6.1) — so importing the file from a unit test doesn't kick off a build.
 
 Note the lesson loop is *sequential* (`for...of` with `await`). It could be parallelized with `Promise.all` (Module 5.5), but at under 100 ms for 114 pages, the simplicity wins — a deliberate "don't optimize what's already fast enough" call.
 
@@ -185,18 +191,18 @@ Step back and see how everything fits:
 
 ```text title=the-whole-system
 course.json ─┐
-content/*.md ─┼─> flatten ─> renderLesson (marked + fill) ─> site/*.html + search-index.json + 404.html
+content/*.md ─┼─> flatten ─> renderLesson (marked + fill) ─> site/*.html + search-index.json + sitemap.xml + 404.html
 templates/   ─┘                   │
 assets/ ────────────── cp ────────┘──────────────────────────────────> site/assets/
 ```
 
-That's a complete static-site generator in ~250 well-commented lines, built from Node built-ins plus one dependency. You now understand every part — and you have a blueprint for building your own generator for *anything*: docs, a blog, a report dashboard. Change the manifest shape, change the template, change the renderer; the architecture stays the same.
+That's a complete static-site generator in a few hundred well-commented lines, built from Node built-ins plus one dependency. You now understand every part — and you have a blueprint for building your own generator for *anything*: docs, a blog, a report dashboard. Change the manifest shape, change the template, change the renderer; the architecture stays the same.
 
 > [!TRY]
 > In the repo, open `course.json` and swap the order of two lessons within a module. Run `node tools/generate-pages.mjs`, then open the affected pages and check the Previous/Next links and the "Lesson N of 114" — they updated automatically, with you touching only the manifest. That's the payoff of a single source of truth.
 
 > [!KEY]
-> - The generator is "**read, transform, write**" at scale: manifest + Markdown + template → linked HTML, in ~250 lines.
+> - The generator is "**read, transform, write**" at scale: manifest + Markdown + template → linked HTML, in a few hundred lines.
 > - It uses **only `node:` built-ins plus `marked`** — minimal dependencies for reliability.
 > - **`flatten`** (a pure function in `lib.mjs`, unit-tested) wires prev/next from the manifest, so **navigation can never drift** — the manifest is the single source of truth.
 > - A **custom `marked` renderer** produces the Monaco code blocks and callouts — *extending* a parser, not writing one ("config over code").

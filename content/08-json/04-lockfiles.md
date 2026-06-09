@@ -4,15 +4,15 @@ The lockfile is one of the most important — and most misunderstood — files i
 
 ## The problem lockfiles solve
 
-Recall version ranges (Module 8.2): `"marked": "^12.0.0"` means "12.0.0 or any compatible newer version." That flexibility is convenient — you get bug fixes automatically — but it creates a reproducibility problem (Module 1.3):
+Recall version ranges (Module 8.2): `"marked": "^18.0.0"` means "18.0.0 or any compatible newer version." That flexibility is convenient — you get bug fixes automatically — but it creates a reproducibility problem (Module 1.3):
 
 ```text title=the-drift
-You install on Monday    -> npm picks marked 12.0.2 (newest compatible then)
-Teammate installs Friday -> npm picks marked 12.0.5 (a newer one was released)
-CI installs next week    -> npm picks marked 12.1.0
+You install on Monday    -> npm picks marked 18.0.5 (newest compatible then)
+Teammate installs Friday -> npm picks marked 18.0.7 (a newer one was released)
+CI installs next week    -> npm picks marked 18.1.0
 ```
 
-Now three people have *three different versions* of the same dependency, from the same `package.json`. If 12.1.0 has a subtle bug, it works for you and breaks for them — the textbook "works on my machine." Version *ranges* alone can't give reproducible installs.
+Now three people have *three different versions* of the same dependency, from the same `package.json`. If 18.1.0 has a subtle bug, it works for you and breaks for them — the textbook "works on my machine." Version *ranges* alone can't give reproducible installs.
 
 ## The solution: a lockfile
 
@@ -24,8 +24,8 @@ A **lockfile** records the *exact* version of *every* installed package — incl
   "lockfileVersion": 3,
   "packages": {
     "node_modules/marked": {
-      "version": "12.0.2",
-      "resolved": "https://registry.npmjs.org/marked/-/marked-12.0.2.tgz",
+      "version": "18.0.5",
+      "resolved": "https://registry.npmjs.org/marked/-/marked-18.0.5.tgz",
       "integrity": "sha512-..."
     }
   }
@@ -40,10 +40,10 @@ This is the key mental model:
 
 | File | Records | Edited by |
 | --- | --- | --- |
-| `package.json` | what you *want* (ranges: `^12.0.0`) | **humans** |
-| `package-lock.json` | what you *got* (exact: `12.0.2`) | **the tool** (npm) |
+| `package.json` | what you *want* (ranges: `^18.0.0`) | **humans** |
+| `package-lock.json` | what you *got* (exact: `18.0.5`) | **the tool** (npm) |
 
-`package.json` expresses *intent* ("I want a 12.x of marked"). The lockfile records the *resolution* ("we're all using exactly 12.0.2"). You edit `package.json`; npm regenerates the lockfile to match. Never hand-edit a lockfile.
+`package.json` expresses *intent* ("I want an 18.x of marked"). The lockfile records the *resolution* ("we're all using exactly 18.0.5"). You edit `package.json`; npm regenerates the lockfile to match. Never hand-edit a lockfile.
 
 ## Why you commit it (the exception to the rule)
 
@@ -91,7 +91,7 @@ Same pattern everywhere: a human-edited manifest of *what you want*, and a tool-
 > In the repo, open `package-lock.json` and find the `marked` entry — note its exact `version` and `integrity` hash. Compare to `package.json`, which has a range or exact value. You're seeing "what we got" vs "what we want." Then note that both the Dockerfile and `ci.yml` run `npm ci`, not `npm install`.
 
 > [!KEY]
-> - Version *ranges* (`^12.0.0`) cause drift: different installs get different versions → "works on my machine."
+> - Version *ranges* (`^18.0.0`) cause drift: different installs get different versions → "works on my machine."
 > - A **lockfile** pins the **exact** version, source, and **integrity hash** of every (transitive) dependency, so installs are identical everywhere.
 > - **`package.json` = what you want** (human-edited ranges); **lockfile = what you got** (tool-generated exact versions). Never hand-edit the lockfile.
 > - **Commit the lockfile** — it's the deliberate exception to "don't commit artifacts," because its job *is* reproducibility.

@@ -8,8 +8,8 @@ A typical project accumulates commands like these:
 
 ```bash title=the-pile.sh
 node tools/generate-pages.mjs
-node --experimental-sqlite examples/node/migrate.mjs
-node --experimental-sqlite examples/node/seed-database.mjs
+node examples/node/migrate.mjs
+node examples/node/seed-database.mjs
 python3 tools/generate-pages.py --out site-py
 npx playwright test
 shellcheck examples/shell/*.sh

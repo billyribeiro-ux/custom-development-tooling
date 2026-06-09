@@ -22,7 +22,7 @@ SHELL := bash
 ## .PHONY: declaring the tasks
 
 ```makefile title=Makefile
-.PHONY: help install build build-py serve test lint clean
+.PHONY: help install build build-py serve test test-unit lint clean
 ```
 
 Every target is a *task* (a command to run), not a *file* to produce — so all are declared **`.PHONY`** (Module 11.3). This guarantees they always run, even if a file or folder named `build`, `test`, or `clean` happens to exist (and `clean` deletes a `site/` folder, so this matters!). One line of insurance against the most common make gotcha.
@@ -65,11 +65,14 @@ Here's the language-independence payoff (Module 11.1): `make build` runs the **N
 serve: build ## Build, then serve the site at http://localhost:8080
 	node tools/serve.mjs
 
-test: build ## Build, then run the Playwright end-to-end tests
+test-unit: ## Run the generator unit tests (node:test)
+	node --test tests/unit/*.test.mjs
+
+test: build test-unit ## Build, run unit tests, then the Playwright end-to-end tests
 	npx playwright test
 ```
 
-Note the prerequisites (Module 11.2): `serve: build` and `test: build` mean **"build first, then do this."** Run `make test` and make automatically runs `build` *before* `playwright test` — you can never accidentally test a stale or missing site. Task composition: small tasks (`build`) chained into workflows (`test`). This is why prerequisites matter.
+Note the prerequisites (Module 11.2): `serve: build` and `test: build test-unit` mean **"do those first, then this."** Run `make test` and make automatically runs `build`, then the fast **unit tests** (Module 16.1's pyramid — cheap checks before expensive ones), and only then the Playwright E2E suite — you can never accidentally test a stale or missing site, and a broken pure function fails in milliseconds instead of after a browser spins up. Task composition: small tasks chained into workflows. This is why prerequisites matter.
 
 ## lint: best-effort, multi-language
 
@@ -93,7 +96,7 @@ Removes the generated artifact (Module 1.3 — `site/` is gitignored output). Be
 
 ## The whole picture
 
-Step back: this ~30-line file is the operational manual for the entire project. A newcomer runs `make help`, sees six verbs, and can build, serve, test, lint, and clean — without knowing that `build` is Node, `build-py` is Python, `lint` spans three languages, or that `test` depends on `build`. The complexity is *hidden behind names*. And CI (Module 15) calls the *same* targets, so "works locally" and "works in CI" are the same commands. That's the entire value of a task runner (Module 11.1), realized in one small, careful file.
+Step back: this ~30-line file is the operational manual for the entire project. A newcomer runs `make help`, sees a handful of verbs, and can build, serve, test, lint, and clean — without knowing that `build` is Node, `build-py` is Python, `lint` spans three languages, or that `test` depends on `build`. The complexity is *hidden behind names*. And CI (Module 15) calls the *same* targets, so "works locally" and "works in CI" are the same commands. That's the entire value of a task runner (Module 11.1), realized in one small, careful file.
 
 > [!TRY]
 > In the repo, run `make help` (see the generated menu), then `make build` (Node generator runs), then `make test` (watch it run `build` *first* because of the prerequisite, then Playwright). Finally `make clean`. You've operated the whole project through one interface — exactly as intended.
@@ -102,5 +105,5 @@ Step back: this ~30-line file is the operational manual for the entire project. 
 > - The Makefile sets **`SHELL := bash`** and **`.SHELLFLAGS := -eu -o pipefail -c`** — the Module 3.2 safety preamble applied to *every recipe*.
 > - All targets are **`.PHONY`** (they're tasks, not files); `help` is the self-documenting first/default target (Module 11.4).
 > - **`build`** (Node) and **`build-py`** (Python) show language-independence: one interface over many languages (Module 11.1, 6.5).
-> - **Prerequisites compose tasks**: `test: build` and `serve: build` guarantee a fresh build first.
+> - **Prerequisites compose tasks**: `test: build test-unit` and `serve: build` guarantee a fresh build (and fast unit checks) first.
 > - One **`lint`** target spans shell/Python/TS (Module 10.3 pattern), skipping missing tools gracefully. CI calls the **same targets** — local and CI stay identical.

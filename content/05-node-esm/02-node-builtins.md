@@ -109,7 +109,7 @@ Node keeps absorbing things that used to need libraries:
 The trend is clear: each Node release makes more tooling possible with *no dependencies*. Staying current means writing leaner, more reliable scripts.
 
 > [!NOTE]
-> Some newer built-ins (like `node:sqlite`) are marked *experimental* and may need a flag (`--experimental-sqlite`) or print a warning. Experimental means the API could change, not that it's broken — it's fine for your own tooling. We'll flag this where it matters.
+> Some newer built-ins (like `node:sqlite`) graduated gradually: on Node 22.5–22.12 it sat behind a `--experimental-sqlite` flag; since 22.13 no flag is needed, though Node 22.x still prints an `ExperimentalWarning`; on Node 24 it's simply there. "Experimental" means the API could still change, not that it's broken — it's fine for your own tooling. If you see old tutorials passing the flag, that's why.
 
 ## How to explore the standard library
 

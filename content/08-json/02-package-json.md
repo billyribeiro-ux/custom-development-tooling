@@ -58,12 +58,12 @@ Scripts are the *named entry points* to your tooling (the same idea a `Makefile`
 ```json title=package.json
 {
   "dependencies": {
-    "marked": "12.0.2"
+    "marked": "18.0.5"
   },
   "devDependencies": {
     "@playwright/test": "1.60.0",
-    "typescript": "5.7.3",
-    "@types/node": "22.10.5"
+    "typescript": "6.0.3",
+    "@types/node": "25.9.2"
   }
 }
 ```

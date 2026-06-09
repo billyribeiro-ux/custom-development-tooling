@@ -211,8 +211,10 @@ function buildSidebar() {
     const lessons = byModule.get(mod.n) || [];
     const hasCurrent = lessons.some((l) => l.o === current);
     const items = lessons.map((l) => {
-      const cur = l.o === current ? ' is-current' : '';
-      return `<li><a class="nav-link${cur}" href="${l.o}" data-out="${l.o}">` +
+      const isCur = l.o === current;
+      const cls = isCur ? 'nav-link is-current' : 'nav-link';
+      const aria = isCur ? ' aria-current="page"' : '';
+      return `<li><a class="${cls}"${aria} href="${l.o}" data-out="${l.o}">` +
         `<span class="nav-num">${l.i}</span>` +
         `<span class="nav-text">${escapeText(l.t)}</span>` +
         `<span class="nav-check" aria-hidden="true">✓</span></a></li>`;

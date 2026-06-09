@@ -3,7 +3,7 @@
 Let's read a complete migration file: `examples/sql/migrate.sql`. It's migration `0001` — the one that creates the initial schema for a tiny blog (authors and posts). Every SQL and migration concept from this module appears here, in a file you can actually run.
 
 > [!DOGFOOD]
-> Run it via the migration runner: `node --experimental-sqlite examples/node/migrate.mjs`. The runner reads this `.sql` file and applies it. Open `examples/sql/migrate.sql` alongside this lesson.
+> Run it via the migration runner: `node examples/node/migrate.mjs`. The runner reads this `.sql` file and applies it. Open `examples/sql/migrate.sql` alongside this lesson.
 
 ## The header
 
@@ -87,7 +87,7 @@ The file targets SQLite (so the runnable `migrate.mjs` needs no database server)
 The *shape* of the migration — tables, constraints, foreign keys, indexes — is identical across databases; only these surface details differ. Learn the shape and you can write migrations for any SQL database (the same "good design transcends the specific tool" theme as Module 6.4).
 
 > [!TRY]
-> Run `node --experimental-sqlite examples/node/migrate.mjs` — it applies this migration. Then open the resulting database (`sqlite3 /tmp/course-app.db ".schema"` if you have the SQLite CLI) and see the exact tables this file created. Run the migrate command again and watch it say "up to date" — the runner's idempotency (Module 13.5) in action.
+> Run `node examples/node/migrate.mjs` — it applies this migration. Then open the resulting database (`sqlite3 /tmp/course-app.db ".schema"` if you have the SQLite CLI) and see the exact tables this file created. Run the migrate command again and watch it say "up to date" — the runner's idempotency (Module 13.5) in action.
 
 > [!KEY]
 > - `migrate.sql` is migration **0001**, creating `authors` and `posts` — the schema's origin story (Module 13.1).

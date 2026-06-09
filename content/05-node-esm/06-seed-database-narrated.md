@@ -131,7 +131,7 @@ It queries the actual counts and reports them — confirming the work, closing t
 This 60-line script demonstrates the whole module: ESM imports with `node:` built-ins, `parseArgs` for the CLI, async-free SQLite, data/logic separation, a pure helper, idempotency via `ON CONFLICT`, injection-safe prepared statements, a transaction with rollback, and a clear summary. None of it is exotic — it's the same handful of principles, applied with care.
 
 > [!TRY]
-> In the repo, run `node --experimental-sqlite examples/node/migrate.mjs` then `node --experimental-sqlite examples/node/seed-database.mjs`. Run the seed a *second* time and watch the counts stay at 3/3 — that's idempotency you can see. Then try `--reset` and observe the "cleared" message.
+> In the repo, run `node examples/node/migrate.mjs` then `node examples/node/seed-database.mjs`. (On Node 22.x you'll see an `ExperimentalWarning` for `node:sqlite` — harmless; on Node 24 it's silent. Ancient tutorials pass `--experimental-sqlite`, which was only needed on Node 22.5–22.12.) Run the seed a *second* time and watch the counts stay at 3/3 — that's idempotency you can see. Then try `--reset` and observe the "cleared" message.
 
 > [!KEY]
 > - A real seed script uses `node:sqlite` (no server, no deps), `parseArgs` for options, and data kept separate from logic.

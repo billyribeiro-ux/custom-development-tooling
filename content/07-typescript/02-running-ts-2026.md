@@ -50,7 +50,7 @@ class C { constructor(private x: number) {} }  // 'private' param properties emi
 ```
 
 > [!GOTCHA]
-> If you hit "TypeScript ... is not supported" or similar when running `.ts` directly, you've likely used a non-erasable feature (usually an `enum` or a parameter property). The fix is easy and idiomatic: replace `enum` with a `const` object or a union type, and write constructor assignments explicitly. Modern TS style avoids these features anyway, so this rarely comes up in new code. The `tsconfig.json` option `"erasableSyntaxOnly": true` makes `tsc` flag them for you.
+> If you hit "TypeScript ... is not supported" or similar when running `.ts` directly, you've likely used a non-erasable feature (usually an `enum` or a parameter property). The fix is easy and idiomatic: replace `enum` with a `const` object or a union type, and write constructor assignments explicitly. Modern TS style avoids these features anyway, so this rarely comes up in new code. The `tsconfig.json` option `"erasableSyntaxOnly": true` (TypeScript 5.8+) makes `tsc` flag them for you — **this repo turns it on** (open `tsconfig.json`), so every `.ts` file here is *guaranteed* runnable via native stripping.
 
 ## tsx: the popular alternative
 
@@ -82,6 +82,9 @@ The 2026 default for *tooling scripts*: **native `node x.ts`** if your code is m
 ## Why this matters
 
 The friction of "compile then run" was a real reason people avoided TS for small tools. Removing that friction means you can now get type safety (Module 7.1) for *even small* tooling scripts at almost no cost. It nudges the "is TS worth it here?" calculation toward "yes" more often.
+
+> [!NOTE]
+> The 2026 horizon: the TypeScript team is shipping a **native (Go) port of the compiler** — announced as roughly **10× faster** type-checking, landing as the TypeScript 7 line (with 6.x as the JS-based bridge releases). It changes the *speed* of `tsc --noEmit`, not the model: you'll still run `.ts` directly and type-check separately (Module 7.5) — the check just gets dramatically cheaper, which makes "type-check on every save / every commit" feasible even on huge codebases. Watch for it; don't wait for it.
 
 > [!TRY]
 > Create `hello.ts` with `const n: number = 42; console.log(n * 2);` and run `node hello.ts`. It just works. Now add an `enum Color { Red }` and run again — you'll likely see an error about non-erasable syntax. Replace the enum with `const Color = { Red: 0 } as const;` and watch it run. You've met the erasable-only constraint firsthand.

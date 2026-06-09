@@ -77,7 +77,7 @@ Every serious database setup uses migrations, via a runner — hand-written (Mod
 They differ in syntax, but *all* implement the same idea: ordered, versioned, tracked, reproducible schema changes. Learn the concept and any specific tool is just details.
 
 > [!DOGFOOD]
-> This course's `examples/sql/migrate.sql` (Module 13.4) is migration `0001`, and `examples/node/migrate.mjs` (Module 13.5) is a real migration runner using a `schema_migrations` tracking table. Run `node --experimental-sqlite examples/node/migrate.mjs` once (it applies the migration), then again (it skips — "up to date"). That's versioned, idempotent, reproducible schema management you can run yourself.
+> This course's `examples/sql/migrate.sql` (Module 13.4) is migration `0001`, and `examples/node/migrate.mjs` (Module 13.5) is a real migration runner using a `schema_migrations` tracking table. Run `node examples/node/migrate.mjs` once (it applies the migration), then again (it skips — "up to date"). That's versioned, idempotent, reproducible schema management you can run yourself. (Node 22.x prints a harmless `ExperimentalWarning` for `node:sqlite`; Node 24 doesn't.)
 
 > [!TRY]
 > Think about a database change you might make (adding a "phone number" to users). Sketch it as a migration file name and one line of SQL. Then ask: how would a teammate get this same change? How would you undo it? Those questions — answered by "they run the migration" and "I write a reverting migration" — are the whole reason migrations exist.

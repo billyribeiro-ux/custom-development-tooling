@@ -3,7 +3,7 @@
 A migration *file* (Module 13.4) is inert until something *applies* it. That something is a **migration runner** — and you can write a real one in about 50 lines. Reading `examples/node/migrate.mjs` line by line shows how the whole migration system (Module 13.1) actually works under the hood, and ties together this module with everything from Module 5 (Node scripting).
 
 > [!DOGFOOD]
-> Run it: `node --experimental-sqlite examples/node/migrate.mjs`. It applies every `.sql` file in `examples/sql/` in order, tracking what it's done. Run it twice — the second time it skips everything. Open `examples/node/migrate.mjs` alongside this lesson.
+> Run it: `node examples/node/migrate.mjs`. It applies every `.sql` file in `examples/sql/` in order, tracking what it's done. Run it twice — the second time it skips everything. Open `examples/node/migrate.mjs` alongside this lesson.
 
 ## Setup: imports and the database
 
@@ -119,7 +119,7 @@ Report how many migrations were applied (or "up to date" if none were new), clos
 In ~50 lines you have a *real* migration runner with everything the production tools (Module 13.1) provide: ordered application, a tracking table, idempotent skipping, atomic transactions with rollback, and loud failure. You could point it at a folder of dozens of migrations and it would apply exactly the new ones, in order, safely. And you understand *every line* — so you could extend it (add `down`/rollback, add a `--dry-run`, swap SQLite for Postgres) however you need. That's the goal of this whole course: not to memorize a tool, but to be able to *build* one.
 
 > [!TRY]
-> Run the runner once (`node --experimental-sqlite examples/node/migrate.mjs`) — it applies `migrate.sql`. Now create a *second* migration, `examples/sql/0002_add_comments.sql` (use the example from Module 13.3), and run the runner again. Watch it *skip* `migrate.sql` ("already applied") and *apply* your new `0002`. You've extended a real migration system.
+> Run the runner once (`node examples/node/migrate.mjs`) — it applies `migrate.sql`. Now create a *second* migration, `examples/sql/0002_add_comments.sql` (use the example from Module 13.3), and run the runner again. Watch it *skip* `migrate.sql` ("already applied") and *apply* your new `0002`. You've extended a real migration system.
 
 > [!KEY]
 > - A **migration runner** applies migration files in order and tracks what it's done — ~50 lines with `node:sqlite` and no dependencies.

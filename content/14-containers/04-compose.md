@@ -8,7 +8,7 @@ To run your app with a Postgres database by hand, you'd type something like:
 
 ```bash title=the-tedious-way.sh
 docker network create appnet
-docker run -d --name db --network appnet -e POSTGRES_PASSWORD=dev postgres:16-alpine
+docker run -d --name db --network appnet -e POSTGRES_PASSWORD=dev postgres:17-alpine
 docker run -d --name app --network appnet -p 8080:8080 --env DATABASE_URL=... myapp
 # ...and remember all these flags, in order, every time...
 ```
@@ -31,7 +31,7 @@ services:
       - db
 
   db:
-    image: postgres:16-alpine     # use a prebuilt image (Module 14.1)
+    image: postgres:17-alpine     # use a prebuilt image (Module 14.1)
     environment:
       POSTGRES_PASSWORD: dev
 ```
@@ -50,7 +50,7 @@ One file, one command. A newcomer clones the repo and runs `docker compose up` �
 
 A Compose file is a `services` map, each service a container definition:
 
-- **`build:` or `image:`** — each service either *builds* from a Dockerfile (`build: .`) or *uses* a prebuilt image (`image: postgres:16-alpine`). Your app builds; off-the-shelf services (databases) use images.
+- **`build:` or `image:`** — each service either *builds* from a Dockerfile (`build: .`) or *uses* a prebuilt image (`image: postgres:17-alpine`). Your app builds; off-the-shelf services (databases) use images.
 - **`ports:`** — `"host:container"` maps a port out to your machine (Module 14.1), so `localhost:8080` reaches the app.
 - **`environment:`** — sets env vars in the container (Module 2.3), like the database connection string.
 - **`depends_on:`** — declares startup order (start `db` before `app`).
@@ -73,7 +73,7 @@ A subtle but powerful feature: Compose puts all services on a shared network, an
 > `depends_on` waits for the database container to *start*, not for the database to be *ready to accept connections*. A database container "starts" in a second but may take several more to actually boot. So your app can start, try to connect, and fail — because the DB process is up but not listening yet. The fix is a **health check** plus `depends_on: condition: service_healthy`:
 > ```yaml title=healthcheck.yml
 > db:
->   image: postgres:16-alpine
+>   image: postgres:17-alpine
 >   healthcheck:
 >     test: ["CMD-SHELL", "pg_isready -U dev -d app_dev"]
 >     interval: 5s
@@ -93,7 +93,7 @@ By default, a container's filesystem is ephemeral — `docker compose down` and 
 ```yaml title=volumes.yml
 services:
   db:
-    image: postgres:16-alpine
+    image: postgres:17-alpine
     volumes:
       - db-data:/var/lib/postgresql/data    # named volume: persists the DB data
 
@@ -111,7 +111,7 @@ A key boundary, like `.env` (Module 9.1):
 > Docker Compose is designed for **local development** orchestration (and simple single-host setups). For *production* multi-host orchestration — scaling, rolling updates, self-healing, load balancing across machines — the standard tool is **Kubernetes** (or a managed platform). Don't try to run a serious production system on `docker compose` across many servers. Compose's sweet spot: "give me my whole dev stack with one command." Match the tool to the task (Module 6.5).
 
 > [!DOGFOOD]
-> The course's `examples/docker/docker-compose.yml` defines two services: `site` (built from the course Dockerfile, Module 14.2/14.3, on port 8080) and `db` (Postgres 16-alpine for the migration lessons). It uses `depends_on: condition: service_healthy` with a `pg_isready` health check (the gotcha above), a named volume `db-data` to persist the database, and environment variables for local-only credentials. Run `docker compose -f examples/docker/docker-compose.yml up` to bring up the whole stack. Open the file and find each feature.
+> The course's `examples/docker/docker-compose.yml` defines two services: `site` (built from the course Dockerfile, Module 14.2/14.3, on port 8080) and `db` (Postgres 17-alpine for the migration lessons). It uses `depends_on: condition: service_healthy` with a `pg_isready` health check (the gotcha above), a named volume `db-data` to persist the database, and environment variables for local-only credentials. Run `docker compose -f examples/docker/docker-compose.yml up` to bring up the whole stack. Open the file and find each feature.
 
 > [!TRY]
 > Read the course's `examples/docker/docker-compose.yml` and identify: the two services, which one `build`s vs uses an `image`, the port mapping, the `depends_on` with `condition: service_healthy`, the health check command, and the named volume. Then trace how the `site` service would reach the database (by the service name `db`, not `localhost`).
